@@ -10,6 +10,6 @@ protected:
     vector<pair<string, Action>> propose_actions(const GameState& state) const override;
 
 public:
-
     explicit KuhnInfoSet(const GameState& state);
+   
 };

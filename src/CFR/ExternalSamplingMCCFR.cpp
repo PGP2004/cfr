@@ -3,36 +3,24 @@
 #include <utility>
 #include <iostream>
 
-//types included for templating later,
+//I templated this to save time on infoset stuff could undo in theory
+
 #include "KuhnPoker/KuhnInfoSet.h"
+
 #include "RockPaperScissors/RPSInfoSet.h"
+#include "TexasHoldEm/HoldEmInfoSet.h"
+#include "BruteAbstraction.h"
 
 using namespace std;
 
-template <typename InfoSetT>
-ExternalSamplingMCCFR<InfoSetT>::ExternalSamplingMCCFR(uint32_t seed, unique_ptr<GameState> init_game_state)
+template <typename InfoSetT, typename AbstractionT>
+ExternalSamplingMCCFR<InfoSetT, AbstractionT>::ExternalSamplingMCCFR(uint32_t seed, unique_ptr<GameState> init_game_state)
     : init_state(std::move(init_game_state)), rng(seed) {}
 
 
-template <typename InfoSetT>    
-string ExternalSamplingMCCFR<InfoSetT>::get_InfoSetID(int player, const GameState& state){
-
-    string output = "";
-
-    output += state.get_hand(player);
-    output += "|";
-
-    for (const Action& action : state.get_action_history()){
-        output += action.description();
-        output += ","; 
-    }
-
-    return output;
-}
-
-template <typename InfoSetT>  
-InfoSetT& ExternalSamplingMCCFR<InfoSetT>::get_InfoSet(int player, const GameState& state) {
-    string id = get_InfoSetID(player, state);
+template <typename InfoSetT, typename AbstractionT>  
+InfoSetT& ExternalSamplingMCCFR<InfoSetT, AbstractionT>::get_InfoSet(int player, const GameState& state) {
+    string id = AbstractionT::get_InfoSetID(player, state);
 
     unordered_map<string, InfoSetT>& mp = infoset_dict[player];
     pair< typename unordered_map<string, InfoSetT>::iterator, bool> res = mp.try_emplace(id, state);   
@@ -40,11 +28,11 @@ InfoSetT& ExternalSamplingMCCFR<InfoSetT>::get_InfoSet(int player, const GameSta
     return it->second;
 }
 
-template <typename InfoSetT>  
-double ExternalSamplingMCCFR<InfoSetT>::traverse(int player, const GameState&state, double pi_i, double pi_opp){
+
+template <typename InfoSetT, typename AbstractionT>  
+double ExternalSamplingMCCFR<InfoSetT, AbstractionT>::traverse(int player, const GameState&state, double pi_i, double pi_opp){
 
     if (state.is_terminal()) {
-        string id = get_InfoSetID(player, state);
         return state.get_rewards(player);
     }
 
@@ -91,8 +79,8 @@ double ExternalSamplingMCCFR<InfoSetT>::traverse(int player, const GameState&sta
     return 0.0;
 } 
 
-template <typename InfoSetT> 
-void ExternalSamplingMCCFR<InfoSetT>::train(int num_iterations){
+template <typename InfoSetT, typename AbstractionT>
+void ExternalSamplingMCCFR<InfoSetT, AbstractionT>::train(int num_iterations){
 
     for (int i = 0; i < num_iterations; i++){
         traverse(0, *init_state, 1.0, 1.0);
@@ -100,10 +88,12 @@ void ExternalSamplingMCCFR<InfoSetT>::train(int num_iterations){
     }
 }
 
-template <typename InfoSetT> 
-const array<unordered_map<string, InfoSetT>, 2>& ExternalSamplingMCCFR<InfoSetT>::view_infosets() const{
+template <typename InfoSetT, typename AbstractionT>
+const array<unordered_map<string, InfoSetT>, 2>& ExternalSamplingMCCFR<InfoSetT, AbstractionT>::view_infosets() const{
     return infoset_dict;
 }
 
-template class ExternalSamplingMCCFR<KuhnInfoSet>;
-template class ExternalSamplingMCCFR<RPSInfoSet>;
+template class ExternalSamplingMCCFR<KuhnInfoSet, BruteAbstraction>;
+template class ExternalSamplingMCCFR<RPSInfoSet, BruteAbstraction>;
+template class ExternalSamplingMCCFR<HoldEmInfoSet, BruteAbstraction>;
+

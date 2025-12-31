@@ -18,7 +18,7 @@
     using std::array;
     using std::unique_ptr;
 
-    template <typename InfoSetT>
+template <typename InfoSetT, typename AbstractionT>
     class ExternalSamplingMCCFR {
 
     private:
@@ -38,7 +38,7 @@
         void print_double_dict(const unordered_map<string, double> double_dict);
 
     public:
-
+    
         const array<unordered_map<string, InfoSetT>, 2>& view_infosets() const;
         
         explicit ExternalSamplingMCCFR(uint32_t seed, unique_ptr<GameState> init_game_state);

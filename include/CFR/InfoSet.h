@@ -42,3 +42,4 @@ public:
     void update_regret(const Action& action, double delta);
     void update_average_strategy(double reach_prob);
 };
+

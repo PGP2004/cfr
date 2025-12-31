@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <memory>
 #include <random>
+#include <array>
 
 using std::pair;
 using std::string;
@@ -16,29 +17,44 @@ using std::vector;
 using std::unordered_map;
 using std::unique_ptr;
 using std::mt19937;
+using std::array;
 
 
-class KuhnGameState : public GameState {
+class HoldEmGameState : public GameState {
 private:
 
-    pair<int,int> stacks;
+    const static int starting_stack = 200; 
+    const static unordered_map<string, int> card_id;
+
+    array<int, 2> stacks;
+    array<int, 2> pips;
     int pot;
-    Deck deck{ vector<string>{"A", "K", "Q"} };
-    pair<string, string> hands;
-    bool cards_dealt;
+
+    Deck deck{ vector<string>{"A", "K", "Q"} }; // fix this
+
+    array<array<string,2>,2> hands;
+    vector<string> board;
+
+    int street;
     int active_player;
+
     vector<Action> action_history;
-    vector<Action> action_set;
-    static const unordered_map<string, int> card_to_rank;
-    vector<Action> make_action_set() const;
+    vector<Action> street_history;
 
 public:
 
-    KuhnGameState();
+    HoldEmGameState();
 
-    KuhnGameState(pair<int,int> player_stacks, int current_pot,
-                  pair<string,string> player_hands, Deck game_deck,
-                  int current_player, vector<Action> history);
+    HoldEmGameState(array<int, 2> player_stacks,
+               array<int, 2> current_pips,
+               int current_pot,
+               array<array<string,2>,2> player_hands,
+               vector<string> cur_board,
+               Deck game_deck,
+               int current_player,
+               int current_street,
+               vector<Action> current_history,
+               vector<Action> current_street_history);
 
     vector<Action> get_action_set() const;
 
@@ -54,12 +70,8 @@ public:
     int get_active_player() const override;
     string get_hand(int player) const override;
 
+    vector<Action> get_action_history() const  override;
+    array<int, 2> get_raise_bounds() const;
     int get_pot() const override;
     string get_board() const override;
-
-    vector<Action> get_action_history() const  override;
-
-  
 };
-
-

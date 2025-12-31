@@ -13,8 +13,6 @@ using std::unique_ptr;
 using std::vector;
 using std::mt19937;
 
-
-
 class GameState {
 
 protected:
@@ -28,7 +26,7 @@ public:
     virtual bool is_terminal() const = 0;
     virtual bool is_chance_node() const = 0;
 
-    virtual bool is_legal_action(const Action& action) const = 0;
+    virtual bool is_legal_action(const Action& action) const = 0; 
     virtual bool is_well_formed_action(const Action& action) const = 0;
 
     unique_ptr<GameState> next_game_state(const Action& action) const {
@@ -47,5 +45,8 @@ public:
     virtual string get_hand(int player) const = 0;
     virtual double get_rewards(int cur_player) const = 0;
     virtual vector<Action> get_action_history() const = 0;
+    virtual int get_pot() const = 0;
+    virtual string get_board() const = 0;
+
 
 };

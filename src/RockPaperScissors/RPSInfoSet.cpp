@@ -18,6 +18,7 @@ RPSInfoSet::propose_actions(const GameState& state) const {
     return out;
 }
 
+
 RPSInfoSet::RPSInfoSet(const GameState& state) {
     init(state);
 }

@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <memory>
 
+
+//todo: can consolidate some stuff between kuhnGameState and RPS gamestate
 using namespace std;
 
 const unordered_map<string, int> KuhnGameState::card_to_rank = {{"A", 3}, {"K", 2}, {"Q", 1}};
@@ -48,9 +50,6 @@ vector<Action> KuhnGameState::make_action_set() const {
     } else if (action_history.back().type() == "RAISE") {
         output.emplace_back(Action("CALL", 1));
         output.emplace_back(Action("FOLD"));
-    } else if (action_history.back().type() == "CHECK") {
-        output.emplace_back(Action("CHECK"));
-        output.emplace_back(Action("RAISE", 1));
     }
 
     return output;
@@ -78,7 +77,7 @@ bool KuhnGameState::is_terminal() const {
     int n = (int)action_history.size();
     if (n == 0) return false;
 
-    if (action_history.back().type() == "FOLD") return true;
+    if (action_history.back().type() == "FOLD" || action_history.back().type() == "CHECK") return true;
 
     if (n >= 2) {
         string a = action_history[n-2].type();
@@ -91,9 +90,6 @@ bool KuhnGameState::is_terminal() const {
 
 
 unique_ptr<GameState> KuhnGameState::next_game_state_impl(const Action& action) const {
-    if (!is_legal_action(action)) {
-        throw invalid_argument("Action is not legal in this info set");
-    }
 
     if (is_terminal()) {
         throw logic_error("Cannot get next info set from terminal state");
@@ -132,8 +128,8 @@ unique_ptr<GameState> KuhnGameState::sample_chance_node(mt19937& rng) const {
     }
 
     Deck new_deck = deck;
-
     new_deck.shuffle_remaining(rng);
+    
     string p0_card = new_deck.deal();
     string p1_card = new_deck.deal();
     
@@ -211,6 +207,14 @@ vector<Action> KuhnGameState::get_action_history() const {
 
 bool KuhnGameState::is_chance_node() const {
     return !cards_dealt;
+}
+
+int KuhnGameState::get_pot() const{
+    return pot;
+}
+
+string KuhnGameState::get_board() const {
+    return "";
 }
 
 string KuhnGameState::get_hand(int player) const {

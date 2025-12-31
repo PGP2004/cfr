@@ -33,7 +33,6 @@ public:
 
     bool is_legal_action(const Action& action) const override; 
     bool is_well_formed_action(const Action& action) const override;
-
     bool is_terminal() const override;
     bool is_chance_node() const override;
 
@@ -44,6 +43,7 @@ public:
     int get_active_player() const override;
     string get_hand(int player) const override;
     vector<Action> get_action_history() const  override;
-    
+    int get_pot() const override;
+    string get_board() const override;
 
 };

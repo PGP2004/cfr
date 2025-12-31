@@ -84,6 +84,14 @@ string RPSGameState::get_hand(int player) const {
     return hands.second;
 }
 
+int RPSGameState::get_pot() const{
+    return 0;
+}
+
+string RPSGameState::get_board() const {
+    return "";
+}
+
 double RPSGameState::get_rewards(int player) const{
 
     if (player != 0 && player != 1) throw logic_error("Cannot get reward for a player not equal to 1");
