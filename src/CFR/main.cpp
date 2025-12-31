@@ -64,23 +64,19 @@ template <class GameStateT, class InfoSetT, class AbstractionT>
 static void run_game(int epochs,
                      int iters_per_epoch) {
 
-    bool print_each_epoch = true;
-    int print_every = 10;
+    bool print_infosets = true;
+
 
     unique_ptr<GameState> init_state = make_unique<GameStateT>();
     ExternalSamplingMCCFR<InfoSetT, AbstractionT> solver(12345u, std::move(init_state));
 
     for (int epoch = 0; epoch < epochs; ++epoch) {
         solver.train(iters_per_epoch);
-
-        // if (print_each_epoch && (epoch % print_every == 0)) {
-        //     cout << "Epoch " << epoch << "\n";
-        //     print_infosets(solver);
-        // }
     }
-
-    // cout << " STRATEGY AT THE END:\n";
-    // print_infosets(solver);
+    if (print_infosets){
+         cout << " STRATEGY AT THE END:\n";
+        print_infosets(solver);
+    }
 }
 
 int main() {
@@ -88,8 +84,11 @@ int main() {
         using clock = std::chrono::steady_clock;
 
         int epochs = 1;
-        int iters_per_epoch = 5000;
+        int iters_per_epoch = 1000;
 
+        //Running Texas HoldEm with the dumbest abstraction possible.
+        //will not converge in reasonable time frame
+        //solves Kuhn and like Rock Paper Scissors tho
         auto t0 = clock::now();
         run_game<HoldEmGameState, HoldEmInfoSet, BruteAbstraction>(epochs, iters_per_epoch);
         auto t1 = clock::now();
@@ -102,6 +101,6 @@ int main() {
         cerr << "Error: " << e.what() << "\n";
         return 1;
     }
-    
+
     return 0;
 }

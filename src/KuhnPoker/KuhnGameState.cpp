@@ -121,7 +121,7 @@ unique_ptr<GameState> KuhnGameState::next_game_state_impl(const Action& action) 
     return make_unique<KuhnGameState>(new_stacks, new_pot, new_hands, new_deck, new_active_player, new_history);
 }
 
-//TODO: Somethings wrong i need to run at some point and figure it out
+//TODO: Somethings wrong i need to run at some point and figure it out,, resolved
 unique_ptr<GameState> KuhnGameState::sample_chance_node(mt19937& rng) const {
     if (!is_chance_node()) {
         throw logic_error("Cannot sample from non-chance node");

@@ -1,0 +1,4 @@
+This class implements a slightly modified version of Kuhn Poker 
+(https://en.wikipedia.org/wiki/Kuhn_poker). The modification is that if the first player
+checks the game automatically ends. This makes it so that there is a unique nash where 
+the first player 

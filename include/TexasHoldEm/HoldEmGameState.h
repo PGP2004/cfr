@@ -19,11 +19,14 @@ using std::unique_ptr;
 using std::mt19937;
 using std::array;
 
+//this implementation is quite readable but dog in terms of like effieciency
+//should make a faster one at some point
+
 
 class HoldEmGameState : public GameState {
 private:
 
-    const static int starting_stack = 200; 
+    const static int starting_stack = 400; 
     const static unordered_map<string, int> card_id;
 
     array<int, 2> stacks;
