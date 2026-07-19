@@ -3,13 +3,14 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
-#include "data_header.h"
-
+#include "dataloader.h"
+#include <algorithm>
 
 //TODO: Add the clustering results to the infokey // and j rework this class hella
 
 template <class T>
 static size_t count_clusters(const std::vector<T>& assign) {
+    if (assign.size() == 0) throw std::runtime_error("The assignment is empty. Cannot get max");
     return std::ranges::max(assign) + size_t{1};
 }
 

@@ -35,10 +35,10 @@ public:
     }
 
     void apply_action(size_t action_idx){
-        if (action_idx > nodes[cur_idx].child_idxs.size()){
+        if (action_idx >= nodes[cur_idx].child_idxs.size()){
              throw std::out_of_range("the idx is out of range");
         }
-        
+
         cur_idx = nodes[cur_idx].child_idxs[action_idx];
         return;
     }

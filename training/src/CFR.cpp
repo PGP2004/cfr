@@ -17,6 +17,7 @@ CFR::CFR(GameState init_state, Abstraction& abstraction, ActionTree& action_tree
     abs(abstraction), action_tree(action_tree), infosets(action_tree, abstraction.cluster_sizes) {
     //TODO: make the params herre knobs
     VectorPool::preallocate(4, 200);
+    iters_per_discount = 1000;
 }
 
 InfoKey CFR::get_InfoKey(const GameState& state, const ActionTree& at) {
@@ -27,7 +28,7 @@ InfoKey CFR::get_InfoKey(const GameState& state, const ActionTree& at) {
     return ikey;
 }
 
-double CFR::traverse(int player, GameState& state, ActionTree& at, int t) {
+double CFR::traverse(int player, GameState& state, ActionTree& at) {
     
     if (state.is_terminal_node()) {
         return state.get_reward(player);
@@ -38,7 +39,7 @@ double CFR::traverse(int player, GameState& state, ActionTree& at, int t) {
         ChanceUndo undo;
         state.write_chance_undo(undo);
         state.apply_chance(rng);
-        double util = traverse(player, state, at, t);
+        double util = traverse(player, state, at);
         state.undo_chance(undo);
         return util;
     }
@@ -61,7 +62,7 @@ double CFR::traverse(int player, GameState& state, ActionTree& at, int t) {
         state.apply_action(sampled_action);
         at.apply_action(sampled_idx);
 
-        double util = traverse(player, state, at, t);
+        double util = traverse(player, state, at);
         
         state.undo_action(undo);
         at.undo_action();
@@ -91,7 +92,7 @@ double CFR::traverse(int player, GameState& state, ActionTree& at, int t) {
         at.apply_action(i);
         state.apply_action(action);
 
-        double action_util = traverse(player, state, at, t);
+        double action_util = traverse(player, state, at);
         state.undo_action(undo);
         at.undo_action();
 
@@ -111,8 +112,12 @@ void CFR::train(int num_iterations, int starting_iter) {
     auto t0 = std::chrono::steady_clock::now();
 
     for (int i = starting_iter; i < starting_iter + num_iterations; ++i) {
-        traverse(0, state, action_tree, i);
-        traverse(1, state, action_tree , i);
+        traverse(0, state, action_tree);
+        traverse(1, state, action_tree);
+
+        if (i % iters_per_discount == 0 && i != 0){
+            infosets.discount(i);
+        }
     }
 
     double total = std::chrono::duration<double>(

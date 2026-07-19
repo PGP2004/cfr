@@ -1,5 +1,6 @@
 #pragma once
-#include "utils.h"
+#include "action_and_undo.h"
+#include "indexer.h"
 
 #include <array>
 #include <cstdint>

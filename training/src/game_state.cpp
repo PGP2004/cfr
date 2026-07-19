@@ -1,5 +1,6 @@
-#include "utils.h"
 #include "game_state.h"
+#include "action_and_undo.h"
+#include "evaluator.h"
 
 #include <algorithm>
 #include <string>

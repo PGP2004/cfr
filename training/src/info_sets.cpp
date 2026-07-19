@@ -11,7 +11,7 @@ InfoSets::InfoSets(const ActionTree& action_tree, const vector<size_t> cluster_c
 
     size_t cum_total = 0;
 
-    for (ActionNode node : action_tree.nodes){
+    for (const ActionNode& node : action_tree.nodes){
 
         size_t st = node.street_idx;
         size_t num_actions = node.edges.size();
@@ -108,15 +108,24 @@ vector<pair<Action, double>> InfoSets::get_average_strategy(const InfoKey& ikey)
         for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], p};
     }
     else {
-        for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], strategy_sum[i] / sum};
+        for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], strategy_sum[offset + i] / sum};
     }
 
     return output;
 }
 
-
 void InfoSets::get_probs(const InfoKey& ikey, vector<double>& probs) const {
     size_t n = ikey.get_num_actions();
     probs.resize(n);
     get_regret_strategy(ikey, probs);      
+}
+
+void InfoSets::discount(int t) {
+
+    if (t <= last_t) throw std::runtime_error("discount: t must exceed last_t");
+
+    double f = double(last_t + 1) / double(t + 1);
+    for (double& r : regret_sum)   r *= f;
+    for (double& s : strategy_sum) s *= f;
+    last_t = t;
 }

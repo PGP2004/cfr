@@ -11,14 +11,6 @@
 #include "game_state.h"
 #include "info_sets.h"
 
-using std::mt19937;
-using std::string;
-using std::vector;
-using std::array;
-using std::unique_ptr;
-using std::shared_ptr;
-
-
 //TODO: Add  InfoKey to CFR
 
 class CFR {
@@ -27,11 +19,12 @@ class CFR {
         GameState state;
         Abstraction abs;
         ActionTree action_tree;
-        mt19937 rng;
+        std::mt19937 rng;
+        int iters_per_discount;
 
         InfoSets infosets;
         InfoKey get_InfoKey(const GameState& state, const ActionTree& at);
-        double traverse(int player, GameState& state, ActionTree& at, int t);
+        double traverse(int player, GameState& state, ActionTree& at);
 
     public:
 
