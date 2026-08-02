@@ -1,4 +1,4 @@
-#include "pipeline_config.h"
+#include "pipeline.h"
 #include "indexer.h"
 #include "dataloader.h"
 #include "evaluator.h"

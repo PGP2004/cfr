@@ -1,4 +1,4 @@
-#include "pipeline_config.h"
+#include "pipeline.h"
 #include "dataloader.h"
 #include "indexer.h"
 #include "L1_k_means.h"

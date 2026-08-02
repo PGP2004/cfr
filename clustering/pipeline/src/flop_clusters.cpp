@@ -1,4 +1,4 @@
-#include "pipeline_config.h"
+#include "pipeline.h"
 #include "dataloader.h"
 #include "emd_k_means.h"
 #include <cstdint>
