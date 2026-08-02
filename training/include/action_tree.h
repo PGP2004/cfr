@@ -3,25 +3,36 @@
 #include <random>
 #include <vector>
 #include <cstddef>
+#include <array>
 
-struct ActionNode{
+//TODO: Add something that 
+
+struct PublicState{
+    int street_idx;
+    int active_player;
+    std::array<double,2> payoffs;
+    bool folded;
+    std::vector<Action> edge_labels;
+};
+
+struct TreeNode{
     size_t node_idx;
     size_t parent_idx;
-    size_t street_idx;
-
-    std::vector<int> child_idxs;
-    std::vector<Action> edges;
-
-    int active_player;
+    std::vector<size_t> child_idxs;
 };
 
 class ActionTree{
 
 private:
+
+    std::vector<Action> discretize_actions(const GameState& state);
     std::vector<Action> get_legal_actions(const GameState& state);
+    PublicState get_public_state(const GameState& state);
     
 public:
-    std::vector<ActionNode> nodes;
+    std::vector<TreeNode> nodes;
+    std::vector<PublicState> pub_states;
+
     size_t root_idx;
     size_t cur_idx;
 
@@ -29,19 +40,28 @@ public:
     void undo_action();
     void apply_action(size_t action_idx);
 
-    int get_player() const{
-        return nodes[cur_idx].active_player;
+    int active_player() const{
+        return pub_states[cur_idx].active_player;
     };
 
-    int get_street() const {
-        return nodes[cur_idx].street_idx;
+    int street() const {
+        return pub_states[cur_idx].street_idx;
     };
 
+    //TODO: examine this later
     bool is_terminal() const {
-        return nodes[cur_idx].street_idx == 8;
+        return pub_states[cur_idx].street_idx == 4;
+    }
+
+    bool folded() const{
+        return pub_states[cur_idx].folded;
     }
 
     bool is_root_node() const{
         return root_idx == cur_idx;
+    }
+
+    double get_payoff(int player) const{
+        return pub_states[cur_idx].payoffs[player];
     }
 };

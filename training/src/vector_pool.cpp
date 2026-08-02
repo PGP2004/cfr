@@ -1,3 +1,3 @@
 #include "vector_pool.h"
-stack<std::vector<double>*> VectorPool::delta_pool;
-stack<std::vector<double>*> VectorPool::probs_pool;
+std::stack<std::vector<double>*> VectorPool::delta_pool;
+std::stack<std::vector<double>*> VectorPool::probs_pool;

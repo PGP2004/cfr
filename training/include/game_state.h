@@ -38,7 +38,8 @@ public:
     GameState  apply_action(const Action& action);
     GameState apply_chance(std::mt19937& rng);
 
-    inline size_t get_street() const { return street; }
+    //this is jank, should fix!
+    inline int get_street() const { return street/2; }
 
     inline bool is_terminal_node() const { return street == 8; }
 
@@ -52,5 +53,15 @@ public:
         if (player != 0 && player != 1) throw std::logic_error("The player index must be one of 1 or 0");
         return pips[player];
     }
+
+    inline bool player_folded() const {
+        Action fold_action = {0,0};
+        return (last_action == fold_action);
+    }
+
+    inline double get_win_payoff(int player) const {
+        double output = (stacks[player] - starting_stack) + static_cast<double>(pot);
+        return output;
+    };
 
 };

@@ -115,14 +115,13 @@ void update_grouped(const Params& params, ClusterBuffer& c_buff, const std::vect
 
 
 /// @brief Given updated `c_buff.grouped`, writes the new centers into `c_buff.centers`.
-///
 /// Each center is computed by embedding the cluster's points into R^N, where N
 /// is the number of vertices and coordinate v holds the probability assigned to
 /// vertex v. The center is the coordinate-wise mean of the cluster's points in
 /// this embedding, truncated to its `params.center_support` largest coordinates
 /// and renormalized to a distribution and storing it in our center representation
 /// @note This is NOT computing the EMD centroid of the multisets. But its close enough that we still 
-/// get decent clustering nonetheless! 
+/// get decent clustering ! 
 /// @note Right now I re-initialize a center iff the cluster for that center is empty.
 /// I should probably do something smarter.
 std::vector<bool> update_centers(const Params& params, ClusterBuffer& c_buff);

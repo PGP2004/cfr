@@ -13,16 +13,36 @@
 
 CFR::CFR(GameState init_state, CardBuckets& buckets, ActionTree& action_tree): state(std::move(init_state)),
    card_buckets(buckets), action_tree(action_tree), infosets(action_tree, buckets.cluster_counts) {
-    //TODO: make the params here knobs
-
     dealer = Dealer();
     VectorPool::preallocate(4, 200);
     iters_per_discount = 1000;
 }
 
+//TODO: Review this and fix the way I check for folds
+double CFR::get_reward(int player, ActionTree& at, Dealer& cur_dealer){
+    if (! at.is_terminal()) throw std::runtime_error("cannot get reward for non-terminal node");
+
+    int opp = 1 - player;
+
+    //if someone folded in the game
+    if (at.folded()){
+        bool won = (player == at.active_player());
+        if (won) return at.get_payoff(player);
+        return -at.get_payoff(opp);
+    }
+
+    // if no one folded in the game. Look at the equities
+    if (cur_dealer.equities[player] == 0.5) return 0.0;
+    else if (cur_dealer.equities[player] == 1.0) return at.get_payoff(player);
+    else if (cur_dealer.equities[player] == 0.0) return - at.get_payoff(opp);
+
+    throw std::runtime_error("Should not be able to get here");
+    return 0.0;
+}
+
 InfoKey CFR::get_InfoKey(const ActionTree& at) {
-    int player = at.get_player();
-    int street = at.get_street();
+    int player = at.active_player();
+    int street = at.street();
     int hand_id = dealer.get_hand_id(player, street);
     int hand_cluster = card_buckets.cluster_of(street, hand_id);  
     InfoKey ikey(at.nodes[at.cur_idx], hand_cluster);
@@ -37,11 +57,11 @@ double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
     }
     
     if (at.is_terminal()) {
-        return get_reward(at, cur_dealer);
+        return get_reward(player, at, cur_dealer);
     }
 
     // Player Action Branch
-    int active_player = at.get_player();
+    int active_player = at.active_player();
     if (active_player != player) {
 
         InfoKey ikey = get_InfoKey(at);
@@ -73,7 +93,6 @@ double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
 
     for (size_t i = 0; i < num_actions; i++) {
 
-        Action action = ikey.get_action(i);
         at.apply_action(i);
         double action_util = traverse(player, at, cur_dealer);
         at.undo_action();
@@ -91,7 +110,6 @@ double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
 }
 
 void CFR::train(int num_iterations, int starting_iter) {
-    auto t0 = std::chrono::steady_clock::now();
 
     for (int i = starting_iter; i < starting_iter + num_iterations; ++i) {
         traverse(0, action_tree, dealer);
@@ -99,4 +117,3 @@ void CFR::train(int num_iterations, int starting_iter) {
         if (i % iters_per_discount == 0 && i != 0) infosets.discount(i);
     }
 }
-

@@ -57,18 +57,38 @@ static void deal_hands(std::mt19937& rng, std::array<std::array<uint8_t, 7>, 2>&
     }
 }
 
-GameState::GameState(): hands{}, stacks{starting_stack, starting_stack}, 
-pips{0,0}, equities(-1.0), pot(0), street(0), active_player(0), 
-last_action{-1,-1}{
+GameState::GameState(){
+    street = 0;
+    active_player = 0;
+
+    stacks.fill(starting_stack);
+    pips.fill(0);
+    pot = 0;
+
+    last_action = {-1,-1};
+
     hands[0].fill(-1);
     hands[1].fill(-1);
+    equities.fill(-1.0);
+
 }
 
 double GameState::get_reward(int player) const {
     if (!is_terminal_node()) throw std::logic_error("Cannot assign rewards from non-terminal state");
     if (player != 0 && player != 1) throw std::logic_error("The player index must be one of 1 or 0");
 
-    double reward = (stacks[player] - starting_stack) + equities[player] * static_cast<double>(pot);
+    Action fold_action = {0,0};
+    double reward = (stacks[player] - starting_stack);
+
+    if (last_action == fold_action){
+        bool won = (active_player == player);
+        if (won){
+            reward += static_cast<double>(pot);
+        }
+        return reward;
+    }
+
+    reward += static_cast<double>(pot);
     return reward;
 }
 

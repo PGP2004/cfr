@@ -9,7 +9,6 @@
 
 #include "info_sets.h"
 #include "action_tree.h"
-
 #include "dealer.h"
 
 class CFR {
@@ -27,7 +26,7 @@ class CFR {
         InfoSets infosets;
         InfoKey get_InfoKey(const ActionTree& at);
         double traverse(int player, ActionTree& at, Dealer& cur_dealer);
-        double get_reward(ActionTree& at, Dealer& cur_dealer);
+        double get_reward(int player, ActionTree& at, Dealer& cur_dealer);
 
     public:
 

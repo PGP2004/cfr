@@ -9,10 +9,10 @@ InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t> clus
 
     size_t cum_total = 0;
 
-    for (const ActionNode& node : action_tree.nodes){
+    for (const PublicState& pub_state : action_tree.pub_states){
 
-        size_t st = node.street_idx;
-        size_t num_actions = node.edges.size();
+        int st = pub_state.street_idx;
+        int num_actions = pub_state.edge_labels.size();
         size_t num_clusters = cluster_counts[st];
 
         offsets.push_back(cum_total);
@@ -87,29 +87,6 @@ size_t InfoSets::sample_regret(const InfoKey& ikey, std::mt19937& rng, std::vect
     }
     return idx;
 }
-std::vector<std::pair<Action, double>> InfoSets::get_average_strategy(const InfoKey& ikey) const{
-
-    std::vector<std::pair<Action, double>> output;
-
-    size_t offset = get_offset(ikey);
-    size_t n = ikey.get_num_actions();
-    output.resize(n);
-
-    double sum = 0.0;
-    for (size_t i = 0 ; i < n; ++i){
-        sum += strategy_sum[offset+i];
-    }
-
-    if (sum <= 0.0){
-        double p = 1.0/double(n); 
-        for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], p};
-    }
-    else {
-        for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], strategy_sum[offset + i] / sum};
-    }
-
-    return output;
-}
 
 void InfoSets::get_probs(const InfoKey& ikey, std::vector<double>& probs) const {
     size_t n = ikey.get_num_actions();
@@ -126,3 +103,27 @@ void InfoSets::discount(int t) {
     for (double& s : strategy_sum) s *= f;
     last_t = t;
 }
+
+// std::vector<std::pair<Action, double>> InfoSets::get_average_strategy(const InfoKey& ikey) const{
+
+//     std::vector<std::pair<Action, double>> output;
+
+//     size_t offset = get_offset(ikey);
+//     size_t n = ikey.get_num_actions();
+//     output.resize(n);
+
+//     double sum = 0.0;
+//     for (size_t i = 0 ; i < n; ++i){
+//         sum += strategy_sum[offset+i];
+//     }
+
+//     if (sum <= 0.0){
+//         double p = 1.0/double(n); 
+//         for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], p};
+//     }
+//     else {
+//         for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], strategy_sum[offset + i] / sum};
+//     }
+
+//     return output;
+// }

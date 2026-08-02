@@ -9,18 +9,11 @@
 #include <random>
 
 struct InfoKey {
-    const ActionNode& node;
+    const TreeNode& node;
     size_t cluster_idx;
 
     inline size_t get_num_actions() const{
-        return node.edges.size();
-    }
-
-    Action get_action(size_t action_idx) const{
-        if (action_idx >= node.child_idxs.size()){
-             throw std::out_of_range("the idx is out of range");
-        }
-        return node.edges[action_idx];
+        return node.child_idxs.size();
     }
 };
 
@@ -47,12 +40,12 @@ public:
 
     void get_regret_strategy(const InfoKey& ikey, std::vector<double>& output) const;
 
-    std::vector<std::pair<Action, double>> get_average_strategy(const InfoKey& ikey) const;
-
     size_t sample_regret(const InfoKey& ikey, std::mt19937& rng, std::vector<double>& probs) const;
 
     void discount(int t);
    
     void get_probs(const InfoKey& ikey, std::vector<double>& probs) const;
+
+    //std::vector<std::pair<Action, double>> get_average_strategy(const InfoKey& ikey) const;
 
 };
