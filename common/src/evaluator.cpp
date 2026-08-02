@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "evaluator.h"
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
@@ -7,12 +7,10 @@
 #include <string>
 #include <vector>
 #include <cctype>
-#include <vector>
-#include <cstdint>
 
 using namespace std;
+//this whole file is Dark Bobby Magic:
 
-//goated code written by bobby
 // Precompute straight masks
 static const uint16_t straight_masks[10] = {
     0b1111100000000,  // A-K-Q-J-T
@@ -202,6 +200,7 @@ uint32_t evaluate_raw(uint8_t* ranks, uint8_t* suits, uint8_t n)
     
     return (1 << 20) | overall;
 }
+  
 
 
 uint32_t evaluate(array<uint8_t, 7>& cards){
@@ -216,4 +215,3 @@ uint32_t evaluate(array<uint8_t, 7>& cards){
     return evaluate_raw(ranks, suits, 7);
 }
   
-

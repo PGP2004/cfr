@@ -11,8 +11,6 @@
 #include "game_state.h"
 #include "info_sets.h"
 
-//TODO: Add  InfoKey to CFR
-
 class CFR {
 
     private:

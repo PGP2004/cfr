@@ -2,8 +2,8 @@
 #include "info_sets.h"
 #include "abstraction.h"
 #include "cfr.h"    
-
 #include "vector_pool.h"
+
 #include <memory>
 #include <utility>
 #include <iostream>
@@ -14,8 +14,8 @@
 using namespace std;
 
 CFR::CFR(GameState init_state, Abstraction& abstraction, ActionTree& action_tree): state(std::move(init_state)),
-    abs(abstraction), action_tree(action_tree), infosets(action_tree, abstraction.cluster_sizes) {
-    //TODO: make the params herre knobs
+    abs(abstraction), action_tree(action_tree), infosets(action_tree, abstraction.cluster_counts) {
+    //TODO: make the params here knobs
     VectorPool::preallocate(4, 200);
     iters_per_discount = 1000;
 }

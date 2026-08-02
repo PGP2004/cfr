@@ -1,5 +1,5 @@
 #include <array>
-#include "utils.h"
+#include "dataloader.h"
 #include "emd_k_means.h"
 #include <string>
 #include <fstream>
@@ -14,16 +14,8 @@ using namespace std;
 void write_flop_assignment_and_centers(const string& sparse_reps_path, const string& dist_matrix_path, 
     const string& ctrs_wts_path, const string& ctrs_atoms_path, const string& assignment_path,  mt19937& rng) {
 
-    if (fs::exists(ctrs_wts_path)) throw runtime_error("write path already exists");
-    if (fs::exists(ctrs_atoms_path)) throw runtime_error("write path already exists");
-    if (fs::exists(assignment_path)) throw runtime_error("write path already exists");
-
-    cout << "DO we get this check" << endl;
-
     auto [sparse_reps, sparse_rep_header] = load_matrix_and_header<uint16_t>(sparse_reps_path);
-    cout << "DO we load sparse reps" << endl;
     auto [dist_matrix, dist_matrix_header] = load_matrix_and_header<int>(dist_matrix_path);
-    cout << "DO we load distance_matirx" << endl;
 
     size_t num_atoms = static_cast<size_t>(dist_matrix_header.num_rows);
     size_t flop_size = static_cast<size_t>(sparse_rep_header.num_cols);
@@ -35,12 +27,10 @@ void write_flop_assignment_and_centers(const string& sparse_reps_path, const str
     size_t num_centers = 50;
 
     vector<float> f_dist_matrix(dist_matrix.begin(), dist_matrix.end());
-
     emd::Params params{num_centers, num_atoms, atoms_per_center, 
         flop_size, num_flops, f_dist_matrix, max_iters, rng};
     
     auto [ctrs, assignments] = emd::emd_k_means(params, sparse_reps);
-    cout << "Finished EMD k means" << endl;
 
     size_t num_ctr_elts = ctrs.size()*ctrs[0].atom_wts.size();
     vector<float> wts; vector<uint16_t> atoms;
@@ -63,7 +53,7 @@ void write_flop_assignment_and_centers(const string& sparse_reps_path, const str
     write_matrix_and_header<uint16_t>(assignment_path, assignment_header, assignments);
 }
 
-int main(int argc, char** argv) {
+int main(int, char** argv) {
     cout << "Started" << endl;
     fs::path exe = fs::weakly_canonical(fs::path(argv[0]));
     fs::path root = exe.parent_path().parent_path().parent_path();                                   

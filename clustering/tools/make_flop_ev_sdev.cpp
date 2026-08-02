@@ -1,5 +1,5 @@
 #include <array>
-#include "utils.h"
+#include "dataloader.h"
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -99,7 +99,7 @@ const string& write_path) {
     write_matrix_and_header(write_path, output_header, output);
 }
 
-int main(int argc, char** argv) {
+int main(int, char** argv) {
     cout << "Started" << endl;
     fs::path exe = fs::weakly_canonical(fs::path(argv[0]));
     fs::path root = exe.parent_path().parent_path().parent_path();                

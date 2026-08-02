@@ -14,7 +14,6 @@ using namespace std;
 int main(int, char** argv) {
     try {
        
-
         fs::path exe  = fs::weakly_canonical(fs::path(argv[0]));
         fs::path root = exe.parent_path().parent_path().parent_path().parent_path();
         fs::path storage = root / "clustering/storage";

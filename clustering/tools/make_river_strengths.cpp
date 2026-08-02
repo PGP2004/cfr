@@ -1,10 +1,12 @@
 #include <array>
-#include "utils.h"
+#include "indexer.h"
+#include "dataloader.h"
+#include "evaluator.h"
+
 #include <string>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
-#include <chrono>
 
 extern "C" {
 #define _Bool bool
@@ -78,7 +80,7 @@ void write_strengths(const string& write_path) {
     }
 }
 
-int main(int argc, char** argv) { 
+int main(int, char** argv) { 
     cout << "Started" << endl;
     fs::path exe = fs::weakly_canonical(fs::path(argv[0]));
     fs::path root = exe.parent_path().parent_path().parent_path();         

@@ -198,10 +198,9 @@ void GameState::undo_action(const ActionUndo& undo) {
     stacks[active_player] += to_pay;
 }
 
-
 void GameState::write_chance_undo(ChanceUndo& undo) const{
-
     if (!(is_chance_node())){ throw logic_error("cant call chance on non chance node");}
+    
     undo.old_pips = pips;
     undo.old_stacks = stacks;
     undo.old_pot = pot;

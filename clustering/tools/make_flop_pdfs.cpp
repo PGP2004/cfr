@@ -1,5 +1,9 @@
+#include "indexer.h"
+#include "dataloader.h"
+#include "evaluator.h"
+#include "l1_k_means.h"
+
 #include <array>
-#include "utils.h"
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -9,6 +13,7 @@
 
 namespace fs = std::filesystem;
 using namespace std;
+
 
 void get_sparse_flop_pdf(const array<uint8_t, 5>& cards, const vector<uint16_t>& assignments, 
     hand_indexer_t& turn_indexer, array<bool, 52>& missing, vector<uint16_t>&pdf ) {
@@ -93,7 +98,7 @@ vector<int> get_dist_matrix(const vector<uint8_t>& centers, uint8_t vector_dim, 
             span<const uint8_t>ctr_i_span(&centers[c_i0_idx], vector_dim);
             span<const uint8_t>ctr_j_span(&centers[c_j0_idx], vector_dim);
 
-            dist_matrix[d_ij_idx] =  L1_dist(ctr_i_span, ctr_j_span);
+            dist_matrix[d_ij_idx] =  l1::L1_dist(ctr_i_span, ctr_j_span);
             dist_matrix[d_ji_idx] = dist_matrix[d_ij_idx];
         }
     }
@@ -117,7 +122,7 @@ void write_flop_pdfs_and_dist_matrix(const string& assignments_path, const strin
     write_sparse_flop_pdfs(assignments_path, pdfs_path);
 }
 
-int main(int argc, char** argv) {
+int main(int , char** argv) {
     cout << "Started" << endl;
     fs::path exe = fs::weakly_canonical(fs::path(argv[0]));
     fs::path root = exe.parent_path().parent_path().parent_path();                

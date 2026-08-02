@@ -52,7 +52,6 @@ void InfoSets::update_strategy(const InfoKey& ikey , vector<double>& cur_strat) 
     }
 }
 
-
 void InfoSets::get_regret_strategy(const InfoKey& ikey, vector<double>& output) const{
 
     size_t offset = get_offset(ikey);

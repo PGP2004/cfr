@@ -1,5 +1,9 @@
 #include <array>
-#include "utils.h"
+
+#include "indexer.h"
+#include "dataloader.h"
+#include "evaluator.h"
+
 #include "l1_k_means.h"
 #include <string>
 #include <fstream>
@@ -38,7 +42,7 @@ void write_assignment_and_centers(const string& center_write_path, const string&
     //                   c1[0] ,c1[1],.. c1[k], where k = CDF dimension = num_clusters
 }
 
-int main(int argc, char** argv) {
+int main(int , char** argv) {
     cout << "Started" << endl;
     fs::path exe = fs::weakly_canonical(fs::path(argv[0]));
     fs::path root = exe.parent_path().parent_path().parent_path();                       

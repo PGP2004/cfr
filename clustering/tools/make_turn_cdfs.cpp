@@ -1,5 +1,8 @@
+#include "indexer.h"
+#include "dataloader.h"
+#include "evaluator.h"
+
 #include <array>
-#include "utils.h"
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -86,7 +89,7 @@ void write_turn_strength_cdf(const string& river_strength_path, const string& wr
 }
 
 
-int main(int argc, char** argv) {
+int main(int , char** argv) {
     cout << "Started" << endl;
     fs::path exe = fs::weakly_canonical(fs::path(argv[0]));
     fs::path root = exe.parent_path().parent_path().parent_path();                           

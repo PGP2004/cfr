@@ -1,5 +1,11 @@
-TODO: Switch to discounted CFR over linear CFR for numerical stability.
-TODO: Revamp the preflop range storing function
+TODO: Switch to discounted CFR over linear CFR for numerical stability - Done 
+
+TODO: Clean up the code. this has multiple parts the first discounted
+    - 1: Set up the utils. i think i acidentally delted. look at the github
+    -2: Add d
+
+
+
 TODO: Launch a longer training run
 TODO: Revamp
 

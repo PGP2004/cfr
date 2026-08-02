@@ -18,7 +18,6 @@ using std::string;
 using std::vector;
 using std::pair;
 using std::uint64_t;
-using std::unique_ptr;
 using std::mt19937;
 using std::logic_error;
 
@@ -64,12 +63,14 @@ public:
     void undo_chance(const ChanceUndo& undo);
 
     //below here is boilerplate
-
     inline size_t get_street() const { return street/2; }
+
     inline bool is_terminal_node() const { return street == 8; }
+
     inline bool is_chance_node() const { return (street%2 == 0) && street != 8; }
 
     inline int get_active_player() const { return active_player; }
+    
     inline int get_pot() const { return pot; }
 
     inline int get_hand_id() const {return hand_ids[active_player][street/2]; }
