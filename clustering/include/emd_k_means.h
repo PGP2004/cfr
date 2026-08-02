@@ -15,14 +15,14 @@
  * which can be found here: https://www.cs.cmu.edu/~sandholm/potential-aware_imperfect-recall.aaai14.pdf
  * I recomend reading the paper before the code.
  * 
- * @note: This code uses non-standard encodings of probabily distributions.
+ * @note This code uses non-standard encodings of probabily distributions.
  * Point encoding: each point is a distribution over the graph's vertices. 
  * We limit ourselves to distributions which can be represented empirically as the outcomes of `pdf_size` draws from the vertex
  * set. A point is a vector x of length `pdf_size` with x[i] the vertex drawn
  * on the i-th draw, so vertex v carries probability (number of entries of x equal to v) / pdf_size.
  * 
  * Center encoding: centers are also distributions over the graph's vertices. 
- * @warning: Centers are stored differently from points.
+ * @warning Centers are stored differently from points.
  * A center is stored sparsely as a pair of parallel vectors (wts, verts), which tell
  * us that the center places mass wts[i] on vertex verts[i], and zero on vertices absent from verts.
  */
@@ -94,7 +94,7 @@ struct Params{
 void fill_emd_cache(const Params& params, const Center& ctr, EMDCache& emd_cache);
 
 /// @brief Approximately computes and returns EMD distance between center and pdf
-float approx_EMD(const Params& params, Center& ctr, std::span<const int> pdf, const EMDCache& emd_cache, EMDScratch& emd_scratch);
+float approx_EMD(const Params& params, const Center& ctr, std::span<const int> pdf, const EMDCache& emd_cache, EMDScratch& emd_scratch);
 
 /// @brief 
 /// TODO: understand what this does again
@@ -122,18 +122,18 @@ void update_grouped(const Params& params, ClusterBuffer& c_buff, const std::vect
 /// and renormalized to a distribution and storing it in the sparse center representation
 /// @note This is NOT computing the EMD centroid of the pdfs. But its close enough that we still 
 /// get decent clustering nonetheless! 
-/// @note: Right now I re-initialize a center iff the cluster for that center is empty.
+/// @note Right now I re-initialize a center iff the cluster for that center is empty.
 /// I should probably do something smarter.
 std::vector<bool> update_centers(const Params& params, ClusterBuffer& c_buff);
 
 /// @brief Writes the re-initialized centers into c_buff.centers, for which re_init[i] = True 
-/// @warning: Does NOT use the same heuristic as the intialization. It uses uniform intialization, which is not ideal.
+/// @warning Does NOT use the same heuristic as the intialization. It uses uniform intialization, which is not ideal.
 /// This is obviously stupid and should be fixed
 void reinit_centers(const Params& params, ClusterBuffer& c_buff,
      const std::vector<int>& pdfs, const std::vector<bool>& reseeded);
 
 
-/// @brief: Randomly intializes centers for each cluster and writes this data into c_buff.centers
+/// @brief Randomly intializes centers for each cluster and writes this data into c_buff.centers
 /// It selects intial centers via the following procedure. 
 /// Throutout the description Let c_i = i^th center.
 /// Select c_0 uniformly from the set of points
@@ -152,12 +152,12 @@ void init_centers(const Params& params, ClusterBuffer& c_buff,
 bool clustering_step(const Params& params, ClusterBuffer& c_buff, const std::vector<int>& pdfs, EMDCache& emd_cache);
 
 /// @brief 
-/// @param params : Encodes the settings for the quantization algorithm
-/// @param pdfs : Sparsely encoded pdfs we wish to cluster
-///@throw: Runtime error if pdfs.size() != params.num_pds*params.pdf_size
-/// @return {assignments, centers}
+/// @param params - Encodes the settings for the quantization algorithm
+/// @param pdfs - Sparsely encoded pdfs we wish to cluster
+///@throw  - Runtime error if pdfs.size() != params.num_pds*params.pdf_size
+/// @return  {assignments, centers}
 /// assignments[i] is the cluster to which the i^th point is assigned
-/// centers: Flattened array of the "params.num_clusters" centroids of each cluster
+/// centers - Flattened array of the "params.num_clusters" centroids of each cluster
 std::pair<std::vector<int>, std::vector<Center>> emd_k_means(const Params& params, const std::vector<int>& pdfs);
    
 }

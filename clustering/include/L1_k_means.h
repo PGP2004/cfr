@@ -1,8 +1,8 @@
 /**
- * @file l1_k_means.h
- * @brief "L1" version of k-means clustering.
+ * @file L1_k_means.h
+ * @brief L1 version of k-means clustering.
  * 
- * @note: Low hanging fruit: Add some level of parallelization.
+ * @note Low hanging fruit: Add some level of parallelization.
  */
 
 #pragma once
@@ -16,7 +16,7 @@
 
 namespace L1{
 
-/// @brief: L1 distance between two equal-length spans of ints.
+/// @brief L1 distance between two equal-length spans of ints.
 /// @warning Does not protect against overflow.
 /// @throws std::runtime_error if sizes differ.
 inline int L1_dist(std::span<const int> a, std::span<const int> b){
@@ -49,7 +49,7 @@ struct ClusteringParams{
     mutable std::mt19937 rng; 
 };
 
-/// @brief: Randomly intializes centers for each cluster and writes this data into c_buff.centers
+/// @brief Randomly intializes centers for each cluster and writes this data into c_buff.centers
 /// It selects intial centers via the following procedure. 
 /// Throutout the description Let c_i = i^th center.
 /// Select c_0 uniformly from the set of points
@@ -61,19 +61,19 @@ void init_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const s
 /// Writes new assignments into the c_buff.assingments vector and new counts into c_buff.counts
 void update_assignments_and_counts(const ClusteringParams& params, ClusterBuffer& c_buff, const std::vector<int>& pts);
 
-/// @brief /// Writes the data from points into c_buff.grouped
+/// @brief  Writes the data from points into c_buff.grouped
 /// sorted by cluster, then by point index within each cluster
 void update_grouped(const ClusteringParams& params, ClusterBuffer& c_buff, const std::vector<int>& pts);
 
 /// @brief Given updated values for grouped, writes the new centers into c_buff.centers
 /// The i^th center is given by the L1 centroid of the i^th cluster of points
 /// @return re_init, where re_init[i] = True iff the i^th center needs to be re-initialized
-/// @note: Right now I re-initialize a center iff the cluster for that center is empty.
-/// I should probably do something smarter.
+/// @note Right now I re-initialize a center iff the cluster for that center is empty.
+/// I should probably do something smarter, like I should have some param and if its sufficiently small I re-init
 std::vector<bool> update_centers(const ClusteringParams& params, ClusterBuffer& c_buff);
 
 /// @brief Writes the re-initialized centers into c_buff.centers, for which re_init[i] = True 
-/// @warning: Does NOT use the same heuristic as the intialization. It uses uniform intialization, which is not ideal.
+/// @warning Does NOT use the same heuristic as the intialization. It uses uniform intialization, which is not ideal.
 /// This is obviously stupid and should be fixed
 void reinit_centers(const ClusteringParams& params,ClusterBuffer& c_buff, const std::vector<int>& pts, const std::vector<bool>& re_init); 
                     
@@ -92,7 +92,7 @@ bool clustering_step(const ClusteringParams& params, ClusterBuffer& c_buff, cons
 ///  pts = [x_0[0], ..., x_0[dim-1], x_1[0], ..., x_1[dim-1], ...]
 /// @return {assignments, centroids}, assignments[i] is the cluster to which the i^th point is assigned
 /// centroids : Flattened array of the "params.num_clusters" centroids of each cluster
-///@throw: Runtime error if pts.size() != params.num_pts*params.dim
+///@throw Runtime error if pts.size() != params.num_pts*params.dim
 std::pair<std::vector<int>,std::vector<int>> l1_k_means(const ClusteringParams& params, const std::vector<int>& pts);
 
 }

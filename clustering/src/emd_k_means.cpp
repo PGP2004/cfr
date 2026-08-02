@@ -207,8 +207,8 @@ namespace emd{
         }
     }  
 
-    void init_centers(const Params& params, const vector<int>&pdfs, 
-        ClusterBuffer& c_buff, EMDCache& emd_cache){
+    void init_centers(const Params& params, ClusterBuffer& c_buff,
+        const vector<int>&pdfs, EMDCache& emd_cache){
         //heuristic initialization ofc_buff.centers 
         
         c_buff.centers.resize(params.num_clusters);
@@ -303,7 +303,7 @@ namespace emd{
         EMDCache emd_cache;
         EMDScratch emd_scratch;
 
-        init_centers(params, pdfs, c_buff, emd_cache);
+        init_centers(params, c_buff, pdfs,emd_cache);
 
         for (size_t iter = 0; iter < params.max_iters; ++iter) {
             bool changed = clustering_step(params, c_buff, pdfs, emd_cache);   
