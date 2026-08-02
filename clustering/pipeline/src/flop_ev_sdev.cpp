@@ -8,9 +8,7 @@
 #include <utility>
 #include <vector>
 
-using namespace std;
-
-void cdfs_to_pdfs(size_t num_centers, size_t num_buckets, vector<int>& cdfs) {
+void cdfs_to_pdfs(size_t num_centers, size_t num_buckets, std::vector<int>& cdfs) {
     //write over the cdfs to get pdfs;
     for (size_t c = 0; c < num_centers; ++c) {
         for (size_t i = num_buckets - 1; i >= 1; --i) {
@@ -20,8 +18,8 @@ void cdfs_to_pdfs(size_t num_centers, size_t num_buckets, vector<int>& cdfs) {
     }
 }
 
-pair<int, int> get_ev_and_sdev(size_t num_buckets, vector<int>& multiset,
-                               const vector<int>& centers, vector<float>& buff) {
+std::pair<int, int> get_ev_and_sdev(size_t num_buckets, std::vector<int>& multiset,
+                               const std::vector<int>& centers, std::vector<float>& buff) {
 
     buff.resize(num_buckets);
     for (size_t i = 0; i < num_buckets; ++i) buff[i] = 0.0;
@@ -54,7 +52,7 @@ pair<int, int> get_ev_and_sdev(size_t num_buckets, vector<int>& multiset,
     sdev += -(ev * ev);
     sdev = sqrt(sdev);
 
-    pair<int, int> output = {static_cast<int>(ev), static_cast<int>(sdev)};
+    std::pair<int, int> output = {static_cast<int>(ev), static_cast<int>(sdev)};
     return output;
 }
 
@@ -64,7 +62,7 @@ void run_flop_ev_sdev(const PipelineConfig& cfg) {
 
     auto [centers, centers_header] = load_matrix_and_header<int>(cfg.art.turn_cdf_centers.string());
     if (centers_header.num_rows != num_centers || centers_header.num_cols != num_buckets)
-        throw runtime_error("turn_cdf_centers shape does not match config: " + centers_header.to_string());
+        throw std::runtime_error("turn_cdf_centers shape does not match config: " + centers_header.to_string());
 
     cdfs_to_pdfs(num_centers, num_buckets, centers);
 
@@ -72,9 +70,9 @@ void run_flop_ev_sdev(const PipelineConfig& cfg) {
     size_t num_flops = static_cast<size_t>(multisets_header.num_rows);
     size_t multiset_size = static_cast<size_t>(multisets_header.num_cols);
 
-    vector<int> multiset_buff(multiset_size, 0);
-    vector<float> prob_buff(num_buckets, 0.0);
-    vector<int> output(2 * num_flops, 0);
+    std::vector<int> multiset_buff(multiset_size, 0);
+    std::vector<float> prob_buff(num_buckets, 0.0);
+    std::vector<int> output(2 * num_flops, 0);
 
     for (size_t i = 0; i < num_flops; ++i) {
         size_t idx = multiset_size * i;

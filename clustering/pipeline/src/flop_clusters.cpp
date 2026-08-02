@@ -1,8 +1,6 @@
-// flop_clusters.cpp
 #include "pipeline_config.h"
 #include "dataloader.h"
 #include "emd_k_means.h"
-
 #include <cstdint>
 #include <random>
 #include <vector>
@@ -10,7 +8,7 @@
 using namespace std;
 
 void run_flop_clusters(const PipelineConfig& cfg) {
-    auto [raw_reps, rep_header] = load_matrix_and_header<uint16_t>(cfg.art.sparse_flop_pdfs.string());
+    auto [raw_reps, rep_header] = load_matrix_and_header<uint16_t>(cfg.art.flop_multisets.string());
     auto [dist_matrix, dist_header] = load_matrix_and_header<int>(cfg.art.turn_distance_matrix.string());
 
     emd::Params params{

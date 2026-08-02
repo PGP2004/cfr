@@ -2,8 +2,6 @@
 #include <cstdint>  
 #include <cstddef> 
 #include <filesystem>  
-
-
 // stages.h
 struct Artifacts {
     std::filesystem::path river_strengths;

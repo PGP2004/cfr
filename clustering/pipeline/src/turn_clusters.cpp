@@ -1,4 +1,3 @@
-// turn_clusters.cpp
 #include "pipeline_config.h"
 #include "dataloader.h"
 #include "L1_k_means.h"
