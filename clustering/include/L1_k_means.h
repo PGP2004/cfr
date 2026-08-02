@@ -85,7 +85,7 @@ void reinit_centers(const ClusteringParams& params,ClusterBuffer& c_buff, const 
 /// @return changed, true iff at least one point was moved to a different cluster 
 bool clustering_step(const ClusteringParams& params, ClusterBuffer& c_buff, const std::vector<int>& pts);
 
-/// @brief: Runs L1 k-means on "pts" until convergence or max iterations.
+/// @brief Runs L1 k-means on "pts" until convergence or max iterations.
 /// @param params  number of clusters, dimension of vectors, number of points, and maximum number of iterations
 /// @param pts: Flattened array of "params.num_pts" vectors of dimension "params.dim"
 /// Given points [x_0, x_1, ...] with x_i[j] the j-th entry of the i-th vector:

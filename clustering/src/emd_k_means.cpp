@@ -38,24 +38,24 @@ namespace emd{
     }
 
 
-    float approx_EMD(const Params& params, const Center& ctr, span<const int> pdf,  const EMDCache& emd_cache, EMDScratch& emd_scratch) {
+    float approx_EMD(const Params& params, const Center& ctr, span<const int> multiset,  const EMDCache& emd_cache, EMDScratch& emd_scratch) {
 
-        if (pdf.size() != params.pdf_size) throw runtime_error("Something got cooked");
+        if (multiset.size() != params.multiset_size) throw runtime_error("Something got cooked");
 
-        float temp = 1.0f / static_cast<float>(pdf.size());
-        emd_scratch.targets.assign(pdf.size(), temp);
-        emd_scratch.done.assign(pdf.size(), false);
+        float temp = 1.0f / static_cast<float>(multiset.size());
+        emd_scratch.targets.assign(multiset.size(), temp);
+        emd_scratch.done.assign(multiset.size(), false);
         emd_scratch.mean_remaining.assign(ctr.wts.begin(), ctr.wts.end());
 
         float total_cost = 0;
 
         for (size_t i = 0; i < params.center_support; ++i) {
 
-            for (size_t j = 0; j < params.pdf_size; ++j) {
+            for (size_t j = 0; j < params.multiset_size; ++j) {
 
                 if (emd_scratch.done[j]) continue;
 
-                int ground_cluster = pdf[j];
+                int ground_cluster = multiset[j];
                 size_t oc_idx = ground_cluster * params.center_support + i;
                 int mean_cluster = emd_cache.ordered_clusters[oc_idx];
 
@@ -82,10 +82,10 @@ namespace emd{
     }
 
     void update_assignments_and_counts(const Params& params, ClusterBuffer& c_buff, 
-        const vector<int>& pdfs, EMDCache& emd_cache) {
+        const vector<int>& multisets, EMDCache& emd_cache) {
 
-        c_buff.assignments.assign(params.num_pdfs, 0);
-        c_buff.min_dists.assign(params.num_pdfs, numeric_limits<float>::max());
+        c_buff.assignments.assign(params.num_multisets, 0);
+        c_buff.min_dists.assign(params.num_multisets, numeric_limits<float>::max());
 
         for (size_t ctr = 0; ctr <c_buff.centers.size(); ++ctr) {
             fill_emd_cache(params,c_buff.centers[ctr], emd_cache);   
@@ -94,63 +94,63 @@ namespace emd{
             {
                 EMDScratch local_scratch;              
                 #pragma omp for schedule(static)
-                for (size_t pdf = 0; pdf < params.num_pdfs; ++pdf) {
-                    span<const int> pdf_span(&pdfs[pdf * params.pdf_size], params.pdf_size);
-                    float dist = approx_EMD(params, c_buff.centers[ctr], pdf_span, emd_cache, local_scratch);
-                    if (dist < c_buff.min_dists[pdf]) {
-                        c_buff.min_dists[pdf] = dist;
-                        c_buff.assignments[pdf] = static_cast<int>(ctr);
+                for (size_t multiset = 0; multiset < params.num_multisets; ++multiset) {
+                    span<const int> multiset_span(&multisets[multiset * params.multiset_size], params.multiset_size);
+                    float dist = approx_EMD(params, c_buff.centers[ctr], multiset_span, emd_cache, local_scratch);
+                    if (dist < c_buff.min_dists[multiset]) {
+                        c_buff.min_dists[multiset] = dist;
+                        c_buff.assignments[multiset] = static_cast<int>(ctr);
                     }
                 }
             }
         }
 
         c_buff.counts.assign(params.num_clusters, 0);
-        for (size_t pdf = 0; pdf < params.num_pdfs; ++pdf)
-            c_buff.counts[c_buff.assignments[pdf]] += 1;
+        for (size_t multiset = 0; multiset < params.num_multisets; ++multiset)
+            c_buff.counts[c_buff.assignments[multiset]] += 1;
     }
 
-    void update_grouped(const Params& params, ClusterBuffer& c_buff, const vector<int>& pdfs) {
-        // groups pdfs by cluster assignment into contiguous blocks in c_buff.grouped
+    void update_grouped(const Params& params, ClusterBuffer& c_buff, const vector<int>& multisets) {
+        // groups multisets by cluster assignment into contiguous blocks in c_buff.grouped
 
         vector<size_t> offsets(params.num_clusters, 0);
 
         for (size_t ctr = 1; ctr < params.num_clusters; ++ctr) {
-            offsets[ctr] = offsets[ctr-1] + c_buff.counts[ctr-1] * params.pdf_size;
+            offsets[ctr] = offsets[ctr-1] + c_buff.counts[ctr-1] * params.multiset_size;
         }
 
-        c_buff.grouped.resize(params.num_pdfs * params.pdf_size);
+        c_buff.grouped.resize(params.num_multisets * params.multiset_size);
 
-        for (size_t pdf = 0; pdf < params.num_pdfs; ++pdf) {
-            int ass_ctr = c_buff.assignments[pdf];
+        for (size_t multiset = 0; multiset < params.num_multisets; ++multiset) {
+            int ass_ctr = c_buff.assignments[multiset];
             size_t gpd_idx = offsets[ass_ctr];
-            size_t pdfs_idx = pdf * params.pdf_size;
-            for (size_t i = 0; i < params.pdf_size; ++i) {
-                c_buff.grouped[gpd_idx + i] = pdfs[pdfs_idx + i];
+            size_t multisets_idx = multiset * params.multiset_size;
+            for (size_t i = 0; i < params.multiset_size; ++i) {
+                c_buff.grouped[gpd_idx + i] = multisets[multisets_idx + i];
             }
-            offsets[ass_ctr] += params.pdf_size;
+            offsets[ass_ctr] += params.multiset_size;
         }   
     }
 
-    void clipped_dense_center(const Params& params, Center& ctr, const vector<int>& sparse_rep){
+    void clipped_dense_center(const Params& params, Center& ctr, const vector<int>& dense_rep){
 
         ctr.wts.resize(params.center_support);
         ctr.verts.resize(params.center_support);
 
-        vector<size_t> idx(sparse_rep.size());
-        for (size_t i = 0; i < sparse_rep.size(); ++i) idx[i] = i;
+        vector<size_t> idx(dense_rep.size());
+        for (size_t i = 0; i < dense_rep.size(); ++i) idx[i] = i;
         nth_element(idx.begin(), idx.begin() + params.center_support, idx.end(),
-                    [&](size_t a, size_t b){ return sparse_rep[a] > sparse_rep[b]; });
+                    [&](size_t a, size_t b){ return dense_rep[a] > dense_rep[b]; });
 
         float cum_sum = 0;
         for (size_t i = 0; i < params.center_support; ++i){
             ctr.verts[i] = idx[i];
-            cum_sum += static_cast<float>(sparse_rep[idx[i]]);
+            cum_sum += static_cast<float>(dense_rep[idx[i]]);
         }
 
         for (size_t i = 0; i < params.center_support; ++i){
             size_t sr_idx = idx[i];
-            ctr.wts[i] = static_cast<float>(sparse_rep[sr_idx])/cum_sum;
+            ctr.wts[i] = static_cast<float>(dense_rep[sr_idx])/cum_sum;
         }
 
     }
@@ -161,36 +161,36 @@ namespace emd{
         vector<bool> reinit(c_buff.counts.size());
         size_t running = 0;
 
-        vector<int> sparse_rep(params.num_verts);
+        vector<int> dense_rep(params.num_verts);
 
         for (size_t ctr = 0; ctr <c_buff.centers.size(); ++ctr){
 
-            sparse_rep.assign(params.num_verts, 0);
+            dense_rep.assign(params.num_verts, 0);
 
             if (c_buff.counts[ctr] == 0){
                 reinit[ctr] = true;
                 continue;
             } 
 
-            size_t end = running + c_buff.counts[ctr]*params.pdf_size;
+            size_t end = running + c_buff.counts[ctr]*params.multiset_size;
             for (size_t i = running; i < end; ++i){
-                sparse_rep[c_buff.grouped[i]] += 1;
+                dense_rep[c_buff.grouped[i]] += 1;
             }
 
             running = end;
-            clipped_dense_center(params, c_buff.centers[ctr], sparse_rep);
+            clipped_dense_center(params, c_buff.centers[ctr], dense_rep);
         }
         return reinit;
     }
 
 
     void reinit_centers(const Params& params, ClusterBuffer& c_buff,
-        const vector<int>& pdfs, const vector<bool>& reinit) {
+        const vector<int>& multisets, const vector<bool>& reinit) {
 
         //fully randomized reinitialize. Should prolly do better at some point
 
-        size_t num_pdfs = pdfs.size() / params.pdf_size;  
-        uniform_int_distribution<size_t> pick(0, num_pdfs - 1);
+        size_t num_multisets = multisets.size() / params.multiset_size;  
+        uniform_int_distribution<size_t> pick(0, num_multisets - 1);
 
         for (size_t ctr = 0; ctr < params.num_clusters; ++ctr) { 
 
@@ -199,21 +199,21 @@ namespace emd{
            c_buff.centers[ctr].verts.assign(params.center_support, 0);
            c_buff.centers[ctr].wts.assign(params.center_support, 0.0);
 
-            size_t pdf = pick(params.rng);                      
-            for (size_t j = 0; j < params.pdf_size; ++j){
-               c_buff.centers[ctr].verts[j] = pdfs[pdf * params.pdf_size + j];
-               c_buff.centers[ctr].verts[j] = 1.0/static_cast<float>(params.pdf_size);
+            size_t multiset = pick(params.rng);                      
+            for (size_t j = 0; j < params.multiset_size; ++j){
+               c_buff.centers[ctr].verts[j] = multisets[multiset * params.multiset_size + j];
+               c_buff.centers[ctr].verts[j] = 1.0/static_cast<float>(params.multiset_size);
             }
         }
     }  
 
     void init_centers(const Params& params, ClusterBuffer& c_buff,
-        const vector<int>&pdfs, EMDCache& emd_cache){
+        const vector<int>&multisets, EMDCache& emd_cache){
         //heuristic initialization ofc_buff.centers 
         
         c_buff.centers.resize(params.num_clusters);
 
-        uniform_int_distribution<size_t> upto(0, params.num_pdfs -1 );
+        uniform_int_distribution<size_t> upto(0, params.num_multisets -1 );
         size_t first_center = upto(params.rng);
 
 
@@ -222,12 +222,12 @@ namespace emd{
            c_buff.centers[i].wts.assign(params.center_support, 0.0);
         }
 
-        for (size_t j = 0; j < params.pdf_size; ++j){
-           c_buff.centers[0].verts[j] = pdfs[first_center * params.pdf_size + j];
-           c_buff.centers[0].wts[j] = 1.0/static_cast<float>(params.pdf_size);
+        for (size_t j = 0; j < params.multiset_size; ++j){
+           c_buff.centers[0].verts[j] = multisets[first_center * params.multiset_size + j];
+           c_buff.centers[0].wts[j] = 1.0/static_cast<float>(params.multiset_size);
         }
 
-        c_buff.min_dists.assign(params.num_pdfs, numeric_limits<float>::max());
+        c_buff.min_dists.assign(params.num_multisets, numeric_limits<float>::max());
 
         //min_dist here actually holds distance squared. kinda funky but nicer this way
         for (size_t ctr = 1; ctr < params.num_clusters; ++ctr){
@@ -238,12 +238,12 @@ namespace emd{
             {
                 EMDScratch local_scratch;                     
                 #pragma omp for reduction(+:total) schedule(static)
-                for (size_t pdf = 0; pdf < params.num_pdfs; ++pdf) {
-                    span<const int> pdf_span(&pdfs[pdf * params.pdf_size], params.pdf_size);
-                    float dist = approx_EMD(params, c_buff.centers[ctr-1], pdf_span, emd_cache, local_scratch);
+                for (size_t multiset = 0; multiset < params.num_multisets; ++multiset) {
+                    span<const int> multiset_span(&multisets[multiset * params.multiset_size], params.multiset_size);
+                    float dist = approx_EMD(params, c_buff.centers[ctr-1], multiset_span, emd_cache, local_scratch);
                     dist = dist * dist;
-                    if (dist < c_buff.min_dists[pdf]) c_buff.min_dists[pdf] = dist;
-                    total += c_buff.min_dists[pdf];
+                    if (dist < c_buff.min_dists[multiset]) c_buff.min_dists[multiset] = dist;
+                    total += c_buff.min_dists[multiset];
                 }
             }
 
@@ -253,17 +253,17 @@ namespace emd{
             size_t chosen = 0;
 
             float cum_sum = 0;
-            for (size_t pdf = 0; pdf < params.num_pdfs; ++pdf){
-                cum_sum += c_buff.min_dists[pdf];
+            for (size_t multiset = 0; multiset < params.num_multisets; ++multiset){
+                cum_sum += c_buff.min_dists[multiset];
                 if(cum_sum >= target){
-                    chosen = pdf;
+                    chosen = multiset;
                     break;
                 }
             }
 
-            for (size_t i = 0; i < params.pdf_size; ++i){
-               c_buff.centers[ctr].verts[i] = pdfs[chosen * params.pdf_size + i];
-               c_buff.centers[ctr].wts[i] = 1.0/static_cast<float>(params.pdf_size);
+            for (size_t i = 0; i < params.multiset_size; ++i){
+               c_buff.centers[ctr].verts[i] = multisets[chosen * params.multiset_size + i];
+               c_buff.centers[ctr].wts[i] = 1.0/static_cast<float>(params.multiset_size);
             }
         }
 
@@ -271,42 +271,42 @@ namespace emd{
 
 
     bool clustering_step(const Params& params, ClusterBuffer& c_buff, 
-        const vector<int>& pdfs,  EMDCache& emd_cache) {
+        const vector<int>& multisets,  EMDCache& emd_cache) {
 
         c_buff.prev_assignments.swap(c_buff.assignments);   
         
-        update_assignments_and_counts(params, c_buff, pdfs, emd_cache); 
-        update_grouped(params, c_buff, pdfs);
+        update_assignments_and_counts(params, c_buff, multisets, emd_cache); 
+        update_grouped(params, c_buff, multisets);
         vector<bool> reinit = update_centers(params, c_buff);
        
         if (find(reinit.begin(), reinit.end(), true) != reinit.end()){
-            reinit_centers(params, c_buff, pdfs, reinit);
+            reinit_centers(params, c_buff, multisets, reinit);
         }
 
         return c_buff.assignments != c_buff.prev_assignments;
     }
 
-    pair<vector<int>, vector<Center>> emd_k_means(const Params& params, const vector<int>& pdfs) {
+    pair<vector<int>, vector<Center>> emd_k_means(const Params& params, const vector<int>& multisets) {
     
 
-        if (pdfs.size() != params.pdf_size*params.num_pdfs){
-            throw runtime_error("pdf size does not match params");
+        if (multisets.size() != params.multiset_size*params.num_multisets){
+            throw runtime_error("multiset size does not match params");
         }
 
         ClusterBuffer c_buff;
-        c_buff.assignments.assign(params.num_pdfs, 0);
-        c_buff.prev_assignments.assign(params.num_pdfs, 0);
-        c_buff.min_dists.assign(params.num_pdfs, 0.0);
-        c_buff.grouped.assign(params.num_pdfs*params.pdf_size, 0);
+        c_buff.assignments.assign(params.num_multisets, 0);
+        c_buff.prev_assignments.assign(params.num_multisets, 0);
+        c_buff.min_dists.assign(params.num_multisets, 0.0);
+        c_buff.grouped.assign(params.num_multisets*params.multiset_size, 0);
         c_buff.counts.assign(params.num_clusters, 0);
 
         EMDCache emd_cache;
         EMDScratch emd_scratch;
 
-        init_centers(params, c_buff, pdfs,emd_cache);
+        init_centers(params, c_buff, multisets,emd_cache);
 
         for (size_t iter = 0; iter < params.max_iters; ++iter) {
-            bool changed = clustering_step(params, c_buff, pdfs, emd_cache);   
+            bool changed = clustering_step(params, c_buff, multisets, emd_cache);   
             if (!changed) break;    
         }
 

@@ -10,16 +10,16 @@
 /**
  * @file emd_k_means.h
  * @brief Approximate Earth Movers Distance (EMD) version of k-means clustering for
- * sparsely encoded pdfs over fully connected weighted graphs. This is an implementation of algorithm two of the paper "Potential-Aware Imperfect-Recall
+ * sparsely encoded multisets over fully connected weighted graphs. This is an implementation of algorithm two of the paper "Potential-Aware Imperfect-Recall
  * Abstraction with Earth Mover’s Distance in Imperfect-Information Games"
- * which can be found here: https://www.cs.cmu.edu/~sandholm/potential-aware_imperfect-recall.aaai14.pdf
+ * which can be found here: https://www.cs.cmu.edu/~sandholm/potential-aware_imperfect-recall.aaai14.multiset
  * I recomend reading the paper before the code.
  * 
  * @note This code uses non-standard encodings of probabily distributions.
- * Point encoding: each point is a distribution over the graph's vertices. 
- * We limit ourselves to distributions which can be represented empirically as the outcomes of `pdf_size` draws from the vertex
- * set. A point is a vector x of length `pdf_size` with x[i] the vertex drawn
- * on the i-th draw, so vertex v carries probability (number of entries of x equal to v) / pdf_size.
+ * Point encoding: each point is a distribution over the graph's vertices encoded as a multiset
+ * We limit ourselves to distributions which can be represented empirically as the outcomes of `multiset_size` draws from the vertex
+ * set. A point is a vector x of length `multiset_size` with x[i] the vertex drawn
+ * on the i-th draw, so vertex v carries probability (number of entries of x equal to v) / multiset_size.
  * 
  * Center encoding: centers are also distributions over the graph's vertices. 
  * @warning Centers are stored differently from points.
@@ -52,12 +52,11 @@ struct EMDScratch{
     std::vector<bool> done;
 };
 
-/// @brief Sparse center: parallel arrays of (vertex, weight) pairs encoding a pdf over vertices.
-/// The encoded pdf has value wts[i] at vertex verts[i]
+/// @brief A struct used to hold a ton of vectors used throughout the clustering process.
 struct ClusterBuffer{
-    std::vector<float> min_dists; // min_dist[i] = distance from i^th pdf to closest center
+    std::vector<float> min_dists; // min_dist[i] = distance from i^th multiset to closest center
 
-    // Sparse pdf representations, grouped by cluster and ordered by
+    // Sparse multiset representations, grouped by cluster and ordered by
     // point index within each cluster.
     std::vector<int> grouped;
 
@@ -71,15 +70,14 @@ struct ClusterBuffer{
 /// @brief Set of params which define the behavior of the clustering algorithm.
 struct Params{
     size_t num_clusters;
-
     size_t num_verts; // number of vertices in the graph
 
     // center_support is a parameter controling center_quantization.
     // We quantize each center to have a supports of size = center_support
     size_t center_support;
 
-    size_t pdf_size; // The size of vectors providing sparse representations of pdfs
-    size_t num_pdfs; // number of pdfs we are clustering
+    size_t multiset_size; // The size of vectors providing sparse representations of multisets
+    size_t num_multisets; // number of multisets we are clustering
 
     // weight_matrix[i,j] = weight of edge from vertex i to vertex j. 
     // weight_matrix is assumed to be symmetric and is flattened in row-major format
@@ -93,23 +91,26 @@ struct Params{
 /// @brief Configures emd cache values for the given cente
 void fill_emd_cache(const Params& params, const Center& ctr, EMDCache& emd_cache);
 
-/// @brief Approximately computes and returns EMD distance between center and pdf
-float approx_EMD(const Params& params, const Center& ctr, std::span<const int> pdf, const EMDCache& emd_cache, EMDScratch& emd_scratch);
+/// @brief Approximately computes and returns EMD distance between center and multiset
+float approx_EMD(const Params& params, const Center& ctr, std::span<const int> multiset, const EMDCache& emd_cache, EMDScratch& emd_scratch);
 
-/// @brief 
-/// TODO: understand what this does again
-void clipped_dense_center(const Params& params, Center& ctr, const std::vector<int>& sparse_rep);
+/// @brief Quantizes a dense, unnormalized multiset over the vertices into a sparse Center.
+// then takes the params.center_support vertices with the largest counts and normalizes
+/// their counts to sum to 1 and writes this result into ctr.verts and ctr.wts.
+/// @param dense_rep Dense vector of length params.num_verts, where sparse_rep[v] is the count of vertex v. 
+/// @warning undefined stuff happens if params.center_support > sparse_rep.size().
+void clipped_dense_center(const Params& params, Center& ctr, const std::vector<int>& dense_rep);
 
 
 /// @brief Updates assignment and counts
 /// Writes new assignments into the c_buff.assingments vector and new counts into c_buff.counts
 void update_assignments_and_counts(const Params& params, ClusterBuffer& c_buff,
- const std::vector<int>& pdfs, EMDCache& emd_cache);
+ const std::vector<int>& multisets, EMDCache& emd_cache);
 
 
 /// @brief Writes the data from points into c_buff.grouped
 /// sorted by cluster, then by point index within each cluster
-void update_grouped(const Params& params, ClusterBuffer& c_buff, const std::vector<int>& pdfs);
+void update_grouped(const Params& params, ClusterBuffer& c_buff, const std::vector<int>& multisets);
 
 
 
@@ -120,7 +121,7 @@ void update_grouped(const Params& params, ClusterBuffer& c_buff, const std::vect
 /// vertex v. The center is the coordinate-wise mean of the cluster's points in
 /// this embedding, truncated to its `params.center_support` largest coordinates
 /// and renormalized to a distribution and storing it in the sparse center representation
-/// @note This is NOT computing the EMD centroid of the pdfs. But its close enough that we still 
+/// @note This is NOT computing the EMD centroid of the multisets. But its close enough that we still 
 /// get decent clustering nonetheless! 
 /// @note Right now I re-initialize a center iff the cluster for that center is empty.
 /// I should probably do something smarter.
@@ -130,7 +131,7 @@ std::vector<bool> update_centers(const Params& params, ClusterBuffer& c_buff);
 /// @warning Does NOT use the same heuristic as the intialization. It uses uniform intialization, which is not ideal.
 /// This is obviously stupid and should be fixed
 void reinit_centers(const Params& params, ClusterBuffer& c_buff,
-     const std::vector<int>& pdfs, const std::vector<bool>& reseeded);
+     const std::vector<int>& multisets, const std::vector<bool>& reseeded);
 
 
 /// @brief Randomly intializes centers for each cluster and writes this data into c_buff.centers
@@ -140,7 +141,7 @@ void reinit_centers(const Params& params, ClusterBuffer& c_buff,
 /// For i > 0: select c_i from a distribution W on the set of pts, where
 ///  W(p) is proportional to the square of the EMD between p and the closest existing center
 void init_centers(const Params& params, ClusterBuffer& c_buff, 
-    const std::vector<int>&pdfs, EMDCache& emd_cache);
+    const std::vector<int>&multisets, EMDCache& emd_cache);
 
 
 /// @brief Runs one step of the clustering algorithm.
@@ -149,15 +150,15 @@ void init_centers(const Params& params, ClusterBuffer& c_buff,
 /// It computes the new centers for each cluster and re-initializes any points that might need it
 /// It checks if the algorithm has converged and updates the prev_assignments
 /// @return changed, true iff at least one point was moved to a different cluster 
-bool clustering_step(const Params& params, ClusterBuffer& c_buff, const std::vector<int>& pdfs, EMDCache& emd_cache);
+bool clustering_step(const Params& params, ClusterBuffer& c_buff, const std::vector<int>& multisets, EMDCache& emd_cache);
 
-/// @brief 
-/// @param params - Encodes the settings for the quantization algorithm
-/// @param pdfs - Sparsely encoded pdfs we wish to cluster
-///@throw  - Runtime error if pdfs.size() != params.num_pds*params.pdf_size
-/// @return  {assignments, centers}
+/// @brief Runs an approximately EMD k means style clustering algorithm on multisets over vertices in finite graphs
+/// @param params Encodes the settings for the quantization algorithm
+/// @param multisets Sparsely encoded multisets we wish to cluster
+///@throw Runtime error if multisets.size() != params.num_pds*params.multiset_size
+/// @return {assignments, centers}
 /// assignments[i] is the cluster to which the i^th point is assigned
 /// centers - Flattened array of the "params.num_clusters" centroids of each cluster
-std::pair<std::vector<int>, std::vector<Center>> emd_k_means(const Params& params, const std::vector<int>& pdfs);
+std::pair<std::vector<int>, std::vector<Center>> emd_k_means(const Params& params, const std::vector<int>& multisets);
    
 }
