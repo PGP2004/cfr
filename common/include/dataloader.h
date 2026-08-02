@@ -22,7 +22,6 @@ struct DataHeader{
     }
 };
 
-//TODO: Clean up the data loading across my scripts
 template <typename T>
 std::pair<std::vector<T>, DataHeader> load_matrix_and_header(const std::string& result_path) {
     std::ifstream in(result_path, std::ios::binary);
@@ -47,9 +46,6 @@ std::pair<std::vector<T>, DataHeader> load_matrix_and_header(const std::string& 
 
     return {std::move(results), header};
 }
-
-uint32_t evaluate_raw(uint8_t* ranks, uint8_t* suits, uint8_t n);
-
 
 template <typename T>
 inline void write_matrix_and_header(const std::string& write_path, DataHeader header, const std::vector<T>& results) {

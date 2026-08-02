@@ -8,9 +8,13 @@
 #pragma once
 #include<vector>
 #include<random>
-#include<span>
+#include <span> 
+#include <stdexcept>
+#include <cstdlib>
+#include <utility>
+#include <cstddef>
 
-namespace l1{
+namespace L1{
 
 /// @brief: L1 distance between two equal-length spans of ints.
 /// @warning Does not protect against overflow.
@@ -35,8 +39,9 @@ struct ClusterBuffer{
     std::vector<int> centers; //Flattened array of centers
 };
 
+ /// @brief parameters that define behavior of the clustering algorithm
 struct ClusteringParams{
-    /// @brief parameters that define behavior of the clustering algorithm
+
     size_t num_clusters; //number of clusters the algorithm will form
     size_t num_pts; //number of points being clustered
     size_t dim; // dimension of points being clustered
@@ -49,12 +54,12 @@ struct ClusteringParams{
 /// Throutout the description Let c_i = i^th center.
 /// Select c_0 uniformly from the set of points
 /// For i > 0: select c_i from a distribution W on the set of pts, where
-//  W(p) is proportional to the square of the L1 distance between p and the closest existing center
+///  W(p) is proportional to the square of the L1 distance between p and the closest existing center
 void init_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const std::vector<int>&pts);
 
 /// @brief Updates assignment and counts
 /// Writes new assignments into the c_buff.assingments vector and new counts into c_buff.counts
-void update_assignment_and_counts(const ClusteringParams& params, ClusterBuffer& c_buff, const std::vector<int>& pts);
+void update_assignments_and_counts(const ClusteringParams& params, ClusterBuffer& c_buff, const std::vector<int>& pts);
 
 /// @brief /// Writes the data from points into c_buff.grouped
 /// sorted by cluster, then by point index within each cluster

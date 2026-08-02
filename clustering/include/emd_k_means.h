@@ -5,7 +5,7 @@
 #include <limits>
 #include <vector>
 #include <span>
-
+#include <stdexcept>
 
 /**
  * @file emd_k_means.h
@@ -94,7 +94,7 @@ struct Params{
 void fill_emd_cache(const Params& params, const Center& ctr, EMDCache& emd_cache);
 
 /// @brief Approximately computes and returns EMD distance between center and pdf
-float approx_EMD(const Params& params, std::span<const int> pdf, const EMDCache& emd_cache, EMDScratch& emd_scratch);
+float approx_EMD(const Params& params, Center& ctr, std::span<const int> pdf, const EMDCache& emd_cache, EMDScratch& emd_scratch);
 
 /// @brief 
 /// TODO: understand what this does again
@@ -103,7 +103,7 @@ void clipped_dense_center(const Params& params, Center& ctr, const std::vector<i
 
 /// @brief Updates assignment and counts
 /// Writes new assignments into the c_buff.assingments vector and new counts into c_buff.counts
-void update_assignment_and_counts(const Params& params, ClusterBuffer& c_buff,
+void update_assignments_and_counts(const Params& params, ClusterBuffer& c_buff,
  const std::vector<int>& pdfs, EMDCache& emd_cache);
 
 
@@ -138,8 +138,8 @@ void reinit_centers(const Params& params, ClusterBuffer& c_buff,
 /// Throutout the description Let c_i = i^th center.
 /// Select c_0 uniformly from the set of points
 /// For i > 0: select c_i from a distribution W on the set of pts, where
-//  W(p) is proportional to the square of the EMD between p and the closest existing center
-std::vector<Center> init_centers(const Params& params, ClusterBuffer& c_buff, 
+///  W(p) is proportional to the square of the EMD between p and the closest existing center
+void init_centers(const Params& params, ClusterBuffer& c_buff, 
     const std::vector<int>&pdfs, EMDCache& emd_cache);
 
 
@@ -154,10 +154,10 @@ bool clustering_step(const Params& params, ClusterBuffer& c_buff, const std::vec
 /// @brief 
 /// @param params : Encodes the settings for the quantization algorithm
 /// @param pdfs : Sparsely encoded pdfs we wish to cluster
+///@throw: Runtime error if pdfs.size() != params.num_pds*params.pdf_size
 /// @return {assignments, centers}
 /// assignments[i] is the cluster to which the i^th point is assigned
 /// centers: Flattened array of the "params.num_clusters" centroids of each cluster
-///@throw: Runtime error if pdfs.size() != params.num_pds*params.pdf_size
 std::pair<std::vector<int>, std::vector<Center>> emd_k_means(const Params& params, const std::vector<int>& pdfs);
    
 }

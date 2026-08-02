@@ -23,6 +23,7 @@ void get_sparse_flop_pdf(const array<uint8_t, 5>& cards, const vector<uint16_t>&
 
     pdf.resize(deck_size - cards.size());
 
+    //note the sim_turn needs to use uint8_t for the poker hand!
     array<uint8_t, 6> sim_turn;
     for (size_t i = 0; i < cards.size(); ++i)
         sim_turn[i] = cards[i];

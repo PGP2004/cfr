@@ -184,8 +184,8 @@ namespace emd{
     }
 
 
-    void reinit_centers(const Params& params, const vector<int>& pdfs, ClusterBuffer& c_buff,
-        const vector<bool>& reinit) {
+    void reinit_centers(const Params& params, ClusterBuffer& c_buff,
+        const vector<int>& pdfs, const vector<bool>& reinit) {
 
         //fully randomized reinitialize. Should prolly do better at some point
 

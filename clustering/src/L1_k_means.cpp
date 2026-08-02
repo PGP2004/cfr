@@ -1,4 +1,4 @@
-#include "l1_k_means.h"
+#include "L1_k_means.h"
 #include <string>
 #include <algorithm>
 #include <random>
@@ -10,7 +10,7 @@
 using namespace std;
 
 
-namespace l1{
+namespace L1{
 
 void update_assignments_and_counts(const ClusteringParams& params, ClusterBuffer& c_buff, const vector<int>& pts) {
 
@@ -89,7 +89,7 @@ vector<bool> update_centers(const ClusteringParams& params, ClusterBuffer& c_buf
     return center_reseeded;
 }
 
-void reinit_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const vector<int>& pts, vector<bool>& reinit) {
+void reinit_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const vector<int>& pts, const vector<bool>& reinit) {
 
     uniform_int_distribution<size_t> pick(0, params.num_pts - 1);
 
@@ -178,6 +178,6 @@ pair<vector<int>,vector<int>> l1_k_means(const ClusteringParams& params, const v
         if (!changed) break;    
     }
 
-    return {std::move(c_buff.centers), std::move(c_buff.assignments)};
+    return {std::move(c_buff.assignments), std::move(c_buff.centers),};
 }
 }
