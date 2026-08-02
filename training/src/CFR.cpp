@@ -30,14 +30,14 @@ InfoKey CFR::get_InfoKey(const ActionTree& at) {
 }
 
 double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
-    
-    if (at.is_terminal()) {
-        return get_reward(at, cur_dealer);
-    }
 
     if (at.is_root_node()){
         cur_dealer.deal_and_update_equities(rng);
         return traverse(player, at, cur_dealer);
+    }
+    
+    if (at.is_terminal()) {
+        return get_reward(at, cur_dealer);
     }
 
     // Player Action Branch
@@ -48,10 +48,9 @@ double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
         VectorPool::ProbsBuffer probs_buf;
         auto& probs = probs_buf.get();
 
-        size_t sampled_idx = infosets.sample_regret(ikey, rng, probs);
-        Action sampled_action = ikey.get_action(sampled_idx);
         infosets.update_strategy(ikey, probs);
 
+        size_t sampled_idx = infosets.sample_regret(ikey, rng, probs);
         at.apply_action(sampled_idx);
         double util = traverse(player, at, cur_dealer);
         at.undo_action();
@@ -63,8 +62,8 @@ double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
     InfoKey ikey = get_InfoKey(at);
     VectorPool::ProbsBuffer probs_buf;
     VectorPool::DeltaBuffer delta_buf;
-    vector<double>& probs = probs_buf.get();
-    vector<double>& action_deltas = delta_buf.get();
+    std::vector<double>& probs = probs_buf.get();
+    std::vector<double>& action_deltas = delta_buf.get();
 
     infosets.get_probs(ikey, probs);
     size_t num_actions = ikey.get_num_actions();

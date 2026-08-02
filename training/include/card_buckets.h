@@ -15,11 +15,11 @@ static size_t count_clusters(const std::vector<T>& assign) {
 
 struct CardBuckets {
     
-    std::vector<int> preflop_clusters;
-    std::vector<int> flop_clusters;
-    std::vector<int> turn_clusters;
-    std::vector<int> river_clusters;
-    std::vector<int> cluster_counts;
+    std::vector<size_t> preflop_clusters;
+    std::vector<size_t> flop_clusters;
+    std::vector<size_t> turn_clusters;
+    std::vector<size_t> river_clusters;
+    std::vector<size_t> cluster_counts;
 
     CardBuckets() = default; 
 
@@ -38,13 +38,13 @@ struct CardBuckets {
             preflop_clusters[i] = static_cast<int>(i);
         }
 
-        auto [fc, flop_header] = load_matrix_and_header<int>(flop_path);
+        auto [fc, flop_header] = load_matrix_and_header<size_t>(flop_path);
         flop_clusters = std::move(fc);
 
-        auto[tc, turn_header] = load_matrix_and_header<int>(turn_path);
+        auto[tc, turn_header] = load_matrix_and_header<size_t>(turn_path);
         turn_clusters = std::move(tc);
 
-        auto [rc, river_header] = load_matrix_and_header<int>(river_path);
+        auto [rc, river_header] = load_matrix_and_header<size_t>(river_path);
         river_clusters = std::move(rc);
 
         cluster_counts.clear();

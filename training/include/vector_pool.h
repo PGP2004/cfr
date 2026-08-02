@@ -1,20 +1,17 @@
 #pragma once
 #include <vector>
 #include <stack>
-using std::vector;
-using std::pair;
-using std::stack;
 
 //TODO: Go through and re-understand this
 class VectorPool {
 private:
-    static stack<vector<double>*> delta_pool;
-    static stack<vector<double>*> probs_pool;
+    static std::stack<std::vector<double>*> delta_pool;
+    static std::stack<std::vector<double>*> probs_pool;
 
 public:
 
     struct DeltaBuffer {
-        vector<double>* buf;
+        std::vector<double>* buf;
         DeltaBuffer() {
             if (VectorPool::delta_pool.empty()) throw std::logic_error("ran outa deltas");
             else {
@@ -30,11 +27,11 @@ public:
 
         DeltaBuffer(const DeltaBuffer&) = delete;
         DeltaBuffer& operator=(const DeltaBuffer&) = delete;
-        vector<double>& get() {return *buf; }
+        std::vector<double>& get() {return *buf; }
     };
 
     struct ProbsBuffer {
-        vector<double>* buf;
+        std::vector<double>* buf;
         ProbsBuffer() {
             if (VectorPool::probs_pool.empty()) throw std::logic_error("ran outa probs");
             else {
@@ -52,18 +49,18 @@ public:
 
         ProbsBuffer(const ProbsBuffer&) = delete;
         ProbsBuffer& operator=(const ProbsBuffer&) = delete;
-        vector<double>& get() { return *buf; }
+        std::vector<double>& get() { return *buf; }
     };
 
 
       static void preallocate(size_t vector_size, size_t count = 100) {
         for (size_t i = 0; i < count; i++) {
            
-            auto* delta_buf = new vector<double>();
+            auto* delta_buf = new std::vector<double>();
             delta_buf->reserve(vector_size);
             delta_pool.push(delta_buf);
 
-            auto* probs_buf = new vector<double>();
+            auto* probs_buf = new std::vector<double>();
             probs_buf->reserve(vector_size);
             probs_pool.push(probs_buf);
         }

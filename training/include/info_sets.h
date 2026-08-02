@@ -39,7 +39,7 @@ private:
 
 public:
 
-    explicit InfoSets(const ActionTree& action_tree, const vector<size_t> cluster_counts);
+    explicit InfoSets(const ActionTree& action_tree, const std::vector<size_t> cluster_counts);
 
     void update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas);
 

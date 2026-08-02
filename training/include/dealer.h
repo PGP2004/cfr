@@ -58,7 +58,7 @@ public:
     }
 
     void deal(std::mt19937& rng) {
-        // shuffle the first 9 cards (partial Fisher-Yates)
+        //fisher yates for the first 9 cards
         for (int i = 0; i < 9; ++i) {
             std::uniform_int_distribution<int> dist(i, 51);
             int j = dist(rng);
