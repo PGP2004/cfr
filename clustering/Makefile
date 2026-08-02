@@ -18,7 +18,7 @@ COMMON_DIR := ../common
 COMMON_LIB := $(COMMON_DIR)/libcommon.a
 CXXFLAGS += -I$(COMMON_DIR)/include
 
-TARGET := $(BIN_DIR)/abstraction
+TARGET := $(BIN_DIR)/clustering_script
 
 SRCS := $(wildcard k_means/src/*.cpp) $(wildcard pipeline/src/*.cpp)
 OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))

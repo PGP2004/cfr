@@ -2,7 +2,7 @@
 #include <cstdint>  
 #include <cstddef> 
 #include <filesystem>  
-
+// stages.h
 struct Artifacts {
     std::filesystem::path river_strengths;
     std::filesystem::path turn_cdfs;
