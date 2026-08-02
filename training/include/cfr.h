@@ -16,7 +16,6 @@ class CFR {
     private:
         GameState state;
         CardBuckets card_buckets;
-
         ActionTree action_tree;
         Dealer dealer;
 
@@ -24,9 +23,12 @@ class CFR {
         int iters_per_discount;
 
         InfoSets infosets;
-        InfoKey get_InfoKey(const ActionTree& at);
-        double traverse(int player, ActionTree& at, Dealer& cur_dealer);
+        InfoKey get_InfoKey(const ActionTree& at, const Dealer& cur_dealer);
         double get_reward(int player, ActionTree& at, Dealer& cur_dealer);
+
+        double traverse_helper(int player, ActionTree& at, Dealer& cur_dealer);
+        void traverse(int player);
+
 
     public:
 

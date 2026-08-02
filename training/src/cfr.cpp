@@ -40,52 +40,48 @@ double CFR::get_reward(int player, ActionTree& at, Dealer& cur_dealer){
     return 0.0;
 }
 
-InfoKey CFR::get_InfoKey(const ActionTree& at) {
+InfoKey CFR::get_InfoKey(const ActionTree& at, const Dealer& cur_dealer) {
     int player = at.active_player();
     int street = at.street();
-    int hand_id = dealer.get_hand_id(player, street);
+    int hand_id = cur_dealer.get_hand_id(player, street);
     int hand_cluster = card_buckets.cluster_of(street, hand_id);  
     InfoKey ikey(at.nodes[at.cur_idx], hand_cluster);
     return ikey;
 }
 
-double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
+double CFR::traverse_helper(int player, ActionTree& at, Dealer& cur_dealer) {
 
-    if (at.is_root_node()){
-        cur_dealer.deal_and_update_equities(rng);
-        return traverse(player, at, cur_dealer);
-    }
-    
     if (at.is_terminal()) {
         return get_reward(player, at, cur_dealer);
     }
 
     // Player Action Branch
     int active_player = at.active_player();
-    if (active_player != player) {
 
-        InfoKey ikey = get_InfoKey(at);
+    if (active_player != player) {
+        InfoKey ikey = get_InfoKey(at, cur_dealer);
         VectorPool::ProbsBuffer probs_buf;
         auto& probs = probs_buf.get();
 
-        infosets.update_strategy(ikey, probs);
+        infosets.get_regret_strategy(ikey, probs);   // fill probs first
+        infosets.update_strategy(ikey, probs);       // now sizes match
 
         size_t sampled_idx = infosets.sample_regret(ikey, rng, probs);
         at.apply_action(sampled_idx);
-        double util = traverse(player, at, cur_dealer);
+        double util = traverse_helper(player, at, cur_dealer);
         at.undo_action();
 
         return util;
-    }
 
+    }
     // Branch where active player = current player
-    InfoKey ikey = get_InfoKey(at);
+    InfoKey ikey = get_InfoKey(at, cur_dealer);
     VectorPool::ProbsBuffer probs_buf;
     VectorPool::DeltaBuffer delta_buf;
     std::vector<double>& probs = probs_buf.get();
     std::vector<double>& action_deltas = delta_buf.get();
 
-    infosets.get_probs(ikey, probs);
+    infosets.get_regret_strategy(ikey, probs);
     size_t num_actions = ikey.get_num_actions();
     action_deltas.assign(num_actions, 0.0);
 
@@ -94,7 +90,7 @@ double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
     for (size_t i = 0; i < num_actions; i++) {
 
         at.apply_action(i);
-        double action_util = traverse(player, at, cur_dealer);
+        double action_util = traverse_helper(player, at, cur_dealer);
         at.undo_action();
 
         node_util += probs[i] * action_util;
@@ -109,11 +105,18 @@ double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
     return node_util;
 }
 
+void CFR::traverse(int player){
+    dealer.deal_and_update_equities(rng);
+    action_tree.restart();
+
+    traverse_helper(player, action_tree, dealer);
+}
+
 void CFR::train(int num_iterations, int starting_iter) {
 
     for (int i = starting_iter; i < starting_iter + num_iterations; ++i) {
-        traverse(0, action_tree, dealer);
-        traverse(1, action_tree, dealer);
+        traverse(0);
+        traverse(1);
         if (i % iters_per_discount == 0 && i != 0) infosets.discount(i);
     }
 }

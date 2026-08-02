@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <stack>
+#include <stdexcept>
 
 //TODO: Go through and re-understand this
 class VectorPool {

@@ -88,7 +88,7 @@ public:
         update_equities();
     }
 
-    int get_hand_id(int player, size_t street){
+    int get_hand_id(int player, size_t street) const {
         return hand_ids[player][street];
     }
 };

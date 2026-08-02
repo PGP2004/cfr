@@ -38,10 +38,6 @@ PublicState ActionTree::get_public_state(const GameState& state){
         .payoffs = {state.get_win_payoff(0),state.get_win_payoff(1)},
         .folded = state.player_folded()
     };
-
-    //TODO: I need to find a way to get rewards here!
-    //this function is wrong as is!
-
     return pub_state;
 }
 
@@ -53,13 +49,11 @@ void ActionTree::apply_action(size_t action_idx){
     if (action_idx >= nodes[cur_idx].child_idxs.size()){
         throw std::out_of_range("the idx is out of range");
     }
-
     cur_idx = nodes[cur_idx].child_idxs[action_idx];
 }
 
 ActionTree::ActionTree(const GameState& root_state) {
     std::mt19937 rng(0);
-
     root_idx = 0;
     cur_idx  = 0;
 
@@ -76,7 +70,9 @@ ActionTree::ActionTree(const GameState& root_state) {
         if (state.is_terminal_node()) continue;
 
         if (state.is_chance_node()) {
-            stack.push_back({state.apply_chance(rng), node_idx});
+            GameState post_chance = state.apply_chance(rng);
+            pub_states[node_idx] = get_public_state(post_chance);
+            stack.push_back({std::move(post_chance), node_idx});
             continue;
         }
 

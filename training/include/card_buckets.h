@@ -6,15 +6,12 @@
 #include <string>
 #include <algorithm>
 
-
 template <class T>
 static size_t count_clusters(const std::vector<T>& assign) {
     if (assign.size() == 0) throw std::runtime_error("The assignment is empty. Cannot get max");
     return std::ranges::max(assign) + size_t{1};
 }
-
 struct CardBuckets {
-    
     std::vector<size_t> preflop_clusters;
     std::vector<size_t> flop_clusters;
     std::vector<size_t> turn_clusters;

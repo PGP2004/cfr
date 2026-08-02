@@ -32,11 +32,13 @@ public:
 
     GameState& operator=(const GameState&) = default;
 
-    double get_reward(int player) const;
-    bool is_legal_action(const Action& action) const;
-
     GameState  apply_action(const Action& action);
+
     GameState apply_chance(std::mt19937& rng);
+
+    double get_reward(int player) const;
+    
+    bool is_legal_action(const Action& action) const;
 
     //this is jank, should fix!
     inline int get_street() const { return street/2; }

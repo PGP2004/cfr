@@ -88,12 +88,6 @@ size_t InfoSets::sample_regret(const InfoKey& ikey, std::mt19937& rng, std::vect
     return idx;
 }
 
-void InfoSets::get_probs(const InfoKey& ikey, std::vector<double>& probs) const {
-    size_t n = ikey.get_num_actions();
-    probs.resize(n);
-    get_regret_strategy(ikey, probs);      
-}
-
 void InfoSets::discount(int t) {
 
     if (t <= last_t) throw std::runtime_error("discount: t must exceed last_t");

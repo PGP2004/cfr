@@ -43,9 +43,5 @@ public:
     size_t sample_regret(const InfoKey& ikey, std::mt19937& rng, std::vector<double>& probs) const;
 
     void discount(int t);
-   
-    void get_probs(const InfoKey& ikey, std::vector<double>& probs) const;
-
-    //std::vector<std::pair<Action, double>> get_average_strategy(const InfoKey& ikey) const;
 
 };

@@ -24,7 +24,6 @@ struct TreeNode{
 class ActionTree{
 
 private:
-
     std::vector<Action> discretize_actions(const GameState& state);
     std::vector<Action> get_legal_actions(const GameState& state);
     PublicState get_public_state(const GameState& state);
@@ -48,9 +47,8 @@ public:
         return pub_states[cur_idx].street_idx;
     };
 
-    //TODO: examine this later
-    bool is_terminal() const {
-        return pub_states[cur_idx].street_idx == 4;
+    bool is_terminal() 
+        const {return nodes[cur_idx].child_idxs.size() == 0;
     }
 
     bool folded() const{
@@ -64,4 +62,9 @@ public:
     double get_payoff(int player) const{
         return pub_states[cur_idx].payoffs[player];
     }
+
+    void restart() {
+        cur_idx = root_idx;
+    }
+
 };
