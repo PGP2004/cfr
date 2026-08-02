@@ -1,79 +1,68 @@
 #include "game_state.h"
 #include "info_sets.h"
-#include "abstraction.h"
+#include "card_buckets.h"
 #include "cfr.h"    
 #include "vector_pool.h"
 
 #include <memory>
 #include <utility>
+#include <vector>
+#include <array>
 #include <iostream>
 
-#include <iomanip>
-#include <map>
 
-using namespace std;
-
-CFR::CFR(GameState init_state, Abstraction& abstraction, ActionTree& action_tree): state(std::move(init_state)),
-    abs(abstraction), action_tree(action_tree), infosets(action_tree, abstraction.cluster_counts) {
+CFR::CFR(GameState init_state, CardBuckets& buckets, ActionTree& action_tree): state(std::move(init_state)),
+   card_buckets(buckets), action_tree(action_tree), infosets(action_tree, buckets.cluster_counts) {
     //TODO: make the params here knobs
+
+    dealer = Dealer();
     VectorPool::preallocate(4, 200);
     iters_per_discount = 1000;
 }
 
-InfoKey CFR::get_InfoKey(const GameState& state, const ActionTree& at) {
-    int hand_id = state.get_hand_id();
-    int street = state.get_street();
-    int hand_cluster = abs.cluster_of(street, hand_id);  
+InfoKey CFR::get_InfoKey(const ActionTree& at) {
+    int player = at.get_player();
+    int street = at.get_street();
+    int hand_id = dealer.get_hand_id(player, street);
+    int hand_cluster = card_buckets.cluster_of(street, hand_id);  
     InfoKey ikey(at.nodes[at.cur_idx], hand_cluster);
     return ikey;
 }
 
-double CFR::traverse(int player, GameState& state, ActionTree& at) {
+double CFR::traverse(int player, ActionTree& at, Dealer& cur_dealer) {
     
-    if (state.is_terminal_node()) {
-        return state.get_reward(player);
+    if (at.is_terminal()) {
+        return get_reward(at, cur_dealer);
     }
 
-    if (state.is_chance_node()) {
-        
-        ChanceUndo undo;
-        state.write_chance_undo(undo);
-        state.apply_chance(rng);
-        double util = traverse(player, state, at);
-        state.undo_chance(undo);
-        return util;
+    if (at.is_root_node()){
+        cur_dealer.deal_and_update_equities(rng);
+        return traverse(player, at, cur_dealer);
     }
+
     // Player Action Branch
-    int active_player = state.get_active_player();
+    int active_player = at.get_player();
     if (active_player != player) {
 
-        InfoKey ikey = get_InfoKey(state, at);
+        InfoKey ikey = get_InfoKey(at);
         VectorPool::ProbsBuffer probs_buf;
         auto& probs = probs_buf.get();
 
         size_t sampled_idx = infosets.sample_regret(ikey, rng, probs);
         Action sampled_action = ikey.get_action(sampled_idx);
-
         infosets.update_strategy(ikey, probs);
 
-        ActionUndo undo;
-        state.write_action_undo(sampled_action, undo);
-
-        state.apply_action(sampled_action);
         at.apply_action(sampled_idx);
-
-        double util = traverse(player, state, at);
-        
-        state.undo_action(undo);
+        double util = traverse(player, at, cur_dealer);
         at.undo_action();
+
         return util;
     }
 
     // Branch where active player = current player
-    InfoKey ikey = get_InfoKey(state, at);
+    InfoKey ikey = get_InfoKey(at);
     VectorPool::ProbsBuffer probs_buf;
     VectorPool::DeltaBuffer delta_buf;
-
     vector<double>& probs = probs_buf.get();
     vector<double>& action_deltas = delta_buf.get();
 
@@ -86,14 +75,8 @@ double CFR::traverse(int player, GameState& state, ActionTree& at) {
     for (size_t i = 0; i < num_actions; i++) {
 
         Action action = ikey.get_action(i);
-        ActionUndo undo;
-        state.write_action_undo(action, undo);
-
         at.apply_action(i);
-        state.apply_action(action);
-
-        double action_util = traverse(player, state, at);
-        state.undo_action(undo);
+        double action_util = traverse(player, at, cur_dealer);
         at.undo_action();
 
         node_util += probs[i] * action_util;
@@ -112,17 +95,9 @@ void CFR::train(int num_iterations, int starting_iter) {
     auto t0 = std::chrono::steady_clock::now();
 
     for (int i = starting_iter; i < starting_iter + num_iterations; ++i) {
-        traverse(0, state, action_tree);
-        traverse(1, state, action_tree);
-
-        if (i % iters_per_discount == 0 && i != 0){
-            infosets.discount(i);
-        }
+        traverse(0, action_tree, dealer);
+        traverse(1, action_tree, dealer);
+        if (i % iters_per_discount == 0 && i != 0) infosets.discount(i);
     }
-
-    double total = std::chrono::duration<double>(
-                       std::chrono::steady_clock::now() - t0).count();
-
-    cout << "runtime for " << num_iterations << " iterations is: " << total << endl;
 }
 

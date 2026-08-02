@@ -1,5 +1,5 @@
 #include "pipeline.h"
-#include "dataloader.h"
+#include "matrix_loader.h"
 #include "indexer.h"
 #include "L1_k_means.h"
 
@@ -56,7 +56,7 @@ void run_flop_multisets(const PipelineConfig& cfg) {
     std::ofstream out(cfg.art.flop_multisets, std::ios::binary);
     if (!out) throw std::runtime_error("cant open the path: " + cfg.art.flop_multisets.string());
 
-    DataHeader flop_header{total_flops, multiset_size, sizeof(int)};
+    MatrixHeader flop_header{total_flops, multiset_size, sizeof(int)};
     out.write(reinterpret_cast<const char*>(&flop_header), sizeof(flop_header));
 
     std::array<bool, 52> missing;

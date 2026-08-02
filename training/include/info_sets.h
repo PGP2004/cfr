@@ -1,9 +1,8 @@
 #pragma once
-#include "abstraction.h"
-#include "action_and_undo.h"
+#include "card_buckets.h"
+#include "action.h"
 #include "action_tree.h"
 
-#include <unordered_map>
 #include <vector>
 #include <string>
 #include <utility>
@@ -25,13 +24,9 @@ struct InfoKey {
     }
 };
 
-//TODO: Review discounting
 class InfoSets {
     
 private: 
-
-    //the fuck is this: abstract and concrete representatino of legal actions
-    //at some point switch to not needing strings
 
     std::vector<size_t> offsets;  
     std::vector<double> regret_sum; 

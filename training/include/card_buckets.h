@@ -1,12 +1,11 @@
 #pragma once
+#include "matrix_loader.h"
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
 #include <string>
-#include "dataloader.h"
 #include <algorithm>
 
-//TODO: Add the clustering results to the infokey // and j rework this class hella
 
 template <class T>
 static size_t count_clusters(const std::vector<T>& assign) {
@@ -14,17 +13,17 @@ static size_t count_clusters(const std::vector<T>& assign) {
     return std::ranges::max(assign) + size_t{1};
 }
 
-struct Abstraction {
+struct CardBuckets {
     
-    std::vector<uint8_t> preflop_clusters;
-    std::vector<uint16_t> flop_clusters;
-    std::vector<uint16_t> turn_clusters;
-    std::vector<uint8_t> river_clusters;
-    std::vector<size_t> cluster_counts;
+    std::vector<int> preflop_clusters;
+    std::vector<int> flop_clusters;
+    std::vector<int> turn_clusters;
+    std::vector<int> river_clusters;
+    std::vector<int> cluster_counts;
 
-    Abstraction() = default; 
+    CardBuckets() = default; 
 
-    Abstraction(const std::string& flop_path,
+    CardBuckets(const std::string& flop_path,
                 const std::string& turn_path,
                 const std::string& river_path) {
         set_clusters(flop_path, turn_path, river_path);
@@ -39,14 +38,13 @@ struct Abstraction {
             preflop_clusters[i] = static_cast<int>(i);
         }
 
-        auto [fc, flop_header] = load_matrix_and_header<uint16_t>(flop_path);
-
+        auto [fc, flop_header] = load_matrix_and_header<int>(flop_path);
         flop_clusters = std::move(fc);
 
-        auto[tc, turn_header] = load_matrix_and_header<uint16_t>(turn_path);
+        auto[tc, turn_header] = load_matrix_and_header<int>(turn_path);
         turn_clusters = std::move(tc);
 
-        auto [rc, river_header] = load_matrix_and_header<uint8_t>(river_path);
+        auto [rc, river_header] = load_matrix_and_header<int>(river_path);
         river_clusters = std::move(rc);
 
         cluster_counts.clear();

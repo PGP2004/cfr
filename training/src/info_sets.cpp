@@ -5,9 +5,7 @@
 #include <iostream>
 #include <cmath>
 
-using namespace std;
-
-InfoSets::InfoSets(const ActionTree& action_tree, const vector<size_t> cluster_counts) {
+InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t> cluster_counts) {
 
     size_t cum_total = 0;
 
@@ -26,13 +24,13 @@ InfoSets::InfoSets(const ActionTree& action_tree, const vector<size_t> cluster_c
 }
 
 
-void InfoSets::update_regret(const InfoKey& ikey, const vector<double>& action_deltas) {
+void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas) {
 
     size_t offset = get_offset(ikey);
     size_t n = ikey.get_num_actions();
 
     if (n != action_deltas.size()) {
-        throw invalid_argument("Action_deltas and regret_sum must have the same size");
+        throw std::invalid_argument("Action_deltas and regret_sum must have the same size");
     }
 
     for (size_t i = 0; i < n; i++) {
@@ -40,19 +38,19 @@ void InfoSets::update_regret(const InfoKey& ikey, const vector<double>& action_d
     }
 }
 
-void InfoSets::update_strategy(const InfoKey& ikey , vector<double>& cur_strat) {
+void InfoSets::update_strategy(const InfoKey& ikey , std::vector<double>& cur_strat) {
 
     size_t offset = get_offset(ikey);
     size_t n = ikey.get_num_actions();
 
-    if (n != cur_strat.size()) throw logic_error("size mismatch");
+    if (n != cur_strat.size()) throw std::logic_error("size mismatch");
 
     for (size_t i = 0; i < n; i++) {
         strategy_sum[offset+i] += cur_strat[i];
     }
 }
 
-void InfoSets::get_regret_strategy(const InfoKey& ikey, vector<double>& output) const{
+void InfoSets::get_regret_strategy(const InfoKey& ikey, std::vector<double>& output) const{
 
     size_t offset = get_offset(ikey);
     size_t n = ikey.get_num_actions();
@@ -61,10 +59,10 @@ void InfoSets::get_regret_strategy(const InfoKey& ikey, vector<double>& output) 
 
     double total_sum = 0.0;
 
-    for (size_t i = 0; i < n; ++i) total_sum += max(regret_sum[offset+i], 0.0);
+    for (size_t i = 0; i < n; ++i) total_sum += std::max(regret_sum[offset+i], 0.0);
         
     if (total_sum > 0.0) {
-        for (size_t i = 0; i < n; i++) output[i] = max(0.0, regret_sum[offset+i]) / total_sum;
+        for (size_t i = 0; i < n; i++) output[i] = std::max(0.0, regret_sum[offset+i]) / total_sum;
     }
 
     else {
@@ -74,11 +72,11 @@ void InfoSets::get_regret_strategy(const InfoKey& ikey, vector<double>& output) 
 
 }
 
-size_t InfoSets::sample_regret(const InfoKey& ikey, mt19937& rng, vector<double>& probs) const {
+size_t InfoSets::sample_regret(const InfoKey& ikey, std::mt19937& rng, std::vector<double>& probs) const {
 
     get_regret_strategy(ikey ,probs);
 
-    uniform_real_distribution<double> unif(0.0, 1.0);
+    std::uniform_real_distribution<double> unif(0.0, 1.0);
     double r = unif(rng);
     double cum = 0.0;
     size_t idx = probs.size() - 1;  
@@ -89,9 +87,9 @@ size_t InfoSets::sample_regret(const InfoKey& ikey, mt19937& rng, vector<double>
     }
     return idx;
 }
-vector<pair<Action, double>> InfoSets::get_average_strategy(const InfoKey& ikey) const{
+std::vector<std::pair<Action, double>> InfoSets::get_average_strategy(const InfoKey& ikey) const{
 
-    vector<pair<Action, double>> output;
+    std::vector<std::pair<Action, double>> output;
 
     size_t offset = get_offset(ikey);
     size_t n = ikey.get_num_actions();
@@ -113,7 +111,7 @@ vector<pair<Action, double>> InfoSets::get_average_strategy(const InfoKey& ikey)
     return output;
 }
 
-void InfoSets::get_probs(const InfoKey& ikey, vector<double>& probs) const {
+void InfoSets::get_probs(const InfoKey& ikey, std::vector<double>& probs) const {
     size_t n = ikey.get_num_actions();
     probs.resize(n);
     get_regret_strategy(ikey, probs);      

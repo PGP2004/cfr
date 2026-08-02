@@ -1,5 +1,5 @@
 #include "pipeline.h"
-#include "dataloader.h"
+#include "matrix_loader.h"
 #include "indexer.h"
 #include "L1_k_means.h"
 
@@ -43,6 +43,6 @@ void run_turn_distance_matrix(const PipelineConfig& cfg) {
     size_t num_buckets = static_cast<size_t>(center_header.num_cols);
 
     std::vector<int> distance_matrix = get_dist_matrix(centers, num_buckets, num_centers);
-    DataHeader dist_matrix_header{num_centers, num_centers, sizeof(int)};
+    MatrixHeader dist_matrix_header{num_centers, num_centers, sizeof(int)};
     write_matrix_and_header<int>(cfg.art.turn_distance_matrix.string(), dist_matrix_header, distance_matrix);
 }

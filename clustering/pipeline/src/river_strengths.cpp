@@ -1,6 +1,6 @@
 #include "pipeline.h"
 #include "indexer.h"
-#include "dataloader.h"
+#include "matrix_loader.h"
 #include "evaluator.h"
 
 #include <array>
@@ -61,7 +61,7 @@ void run_river_strengths(const PipelineConfig& cfg) {
     std::ofstream out(cfg.art.river_strengths, std::ios::binary);
     if (!out) throw std::runtime_error("cant open the write path: " + cfg.art.river_strengths.string());
 
-    DataHeader header{static_cast<uint64_t>(total), 1, sizeof(int)};
+    MatrixHeader header{static_cast<uint64_t>(total), 1, sizeof(int)};
     out.write(reinterpret_cast<const char*>(&header), sizeof(header));
 
     std::array<uint8_t, 7> cards;

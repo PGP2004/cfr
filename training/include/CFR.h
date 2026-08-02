@@ -1,33 +1,36 @@
-
 #pragma once
-
 #include <random>
-#include <string>
 #include <vector>
 #include <array>
-#include <memory>
-#include <unordered_map>
 
+#include "action.h"
 #include "game_state.h"
+#include "card_buckets.h"
+
 #include "info_sets.h"
+#include "action_tree.h"
+
+#include "dealer.h"
 
 class CFR {
 
     private:
         GameState state;
-        Abstraction abs;
+        CardBuckets card_buckets;
+
         ActionTree action_tree;
+        Dealer dealer;
+
         std::mt19937 rng;
         int iters_per_discount;
 
         InfoSets infosets;
-        InfoKey get_InfoKey(const GameState& state, const ActionTree& at);
-        double traverse(int player, GameState& state, ActionTree& at);
+        InfoKey get_InfoKey(const ActionTree& at);
+        double traverse(int player, ActionTree& at, Dealer& cur_dealer);
+        double get_reward(ActionTree& at, Dealer& cur_dealer);
 
     public:
 
-        CFR(GameState init_game_state, Abstraction& abstraction, ActionTree& action_tree);
+        CFR(GameState init_game_state, CardBuckets& card_buckets, ActionTree& action_tree);
         void train(int num_iterations, int starting_iter);
-        double get_action_prob(int player, InfoKey info_key, Action action);
-
     };

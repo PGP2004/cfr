@@ -1,5 +1,5 @@
 #include "pipeline.h"
-#include "dataloader.h"
+#include "matrix_loader.h"
 #include "emd_k_means.h"
 #include <cstdint>
 #include <random>
@@ -37,12 +37,12 @@ void run_flop_clusters(const PipelineConfig& cfg) {
         }
     }
 
-    DataHeader wts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(float)};
+    MatrixHeader wts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(float)};
     write_matrix_and_header<float>(cfg.art.flop_ctrs_wts.string(), wts_header, wts);
 
-    DataHeader verts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(uint16_t)};
+    MatrixHeader verts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(uint16_t)};
     write_matrix_and_header<uint16_t>(cfg.art.flop_ctrs_verts.string(), verts_header, verts);
 
-    DataHeader assignment_header{assignments.size(), 1, sizeof(int)};
+    MatrixHeader assignment_header{assignments.size(), 1, sizeof(int)};
     write_matrix_and_header<int>(cfg.art.flop_assignments.string(), assignment_header, assignments);
 }

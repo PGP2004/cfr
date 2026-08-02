@@ -1,5 +1,5 @@
 #include "pipeline.h"
-#include "dataloader.h"
+#include "matrix_loader.h"
 #include "L1_k_means.h"
 
 #include <cstdint>
@@ -31,9 +31,9 @@ void run_turn_clusters(const PipelineConfig& cfg) {
     auto [assignments, centers] = L1::l1_k_means(params, cdfs);
     std::cout << "Finished L1 k means" << std::endl;
 
-    DataHeader center_header{cfg.turn_clusters, cdf_header.num_cols, sizeof(int)};
+    MatrixHeader center_header{cfg.turn_clusters, cdf_header.num_cols, sizeof(int)};
     write_matrix_and_header<int>(cfg.art.turn_cdf_centers.string(), center_header, centers);
 
-    DataHeader assignment_header{assignments.size(), 1, sizeof(int)};
+    MatrixHeader assignment_header{assignments.size(), 1, sizeof(int)};
     write_matrix_and_header<int>(cfg.art.turn_assignments.string(), assignment_header, assignments);
 }

@@ -5,22 +5,19 @@ using std::vector;
 using std::pair;
 using std::stack;
 
-
-// Object pool for vector buffers to avoid allocations in hot path
+//TODO: Go through and re-understand this
 class VectorPool {
 private:
-
     static stack<vector<double>*> delta_pool;
     static stack<vector<double>*> probs_pool;
 
 public:
-   
+
     struct DeltaBuffer {
         vector<double>* buf;
         DeltaBuffer() {
-            if (VectorPool::delta_pool.empty()) {
-                throw std::logic_error("ran outa deltas");
-            } else {
+            if (VectorPool::delta_pool.empty()) throw std::logic_error("ran outa deltas");
+            else {
                 buf = VectorPool::delta_pool.top();
                 VectorPool::delta_pool.pop();
             }
@@ -28,9 +25,7 @@ public:
         }
         
         ~DeltaBuffer() {
-            if (buf) {
-                VectorPool::delta_pool.push(buf);
-            }
+            if (buf) VectorPool::delta_pool.push(buf);
         }
 
         DeltaBuffer(const DeltaBuffer&) = delete;
@@ -41,14 +36,14 @@ public:
     struct ProbsBuffer {
         vector<double>* buf;
         ProbsBuffer() {
-            if (VectorPool::probs_pool.empty()) {
-                throw std::logic_error("ran outa probs");
-            } else {
+            if (VectorPool::probs_pool.empty()) throw std::logic_error("ran outa probs");
+            else {
                 buf = VectorPool::probs_pool.top();
                 VectorPool::probs_pool.pop();
             }
             buf->clear();
         }
+
         ~ProbsBuffer() {
             if (buf) {
                 VectorPool::probs_pool.push(buf);

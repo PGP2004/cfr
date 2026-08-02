@@ -1,6 +1,6 @@
 // turn_cdfs.cpp
 #include "pipeline.h"
-#include "dataloader.h"
+#include "matrix_loader.h"
 #include "evaluator.h"
 #include "indexer.h"
 
@@ -70,7 +70,7 @@ void run_turn_cdfs(const PipelineConfig& cfg) {
     std::ofstream out(cfg.art.turn_cdfs, std::ios::binary);
     if (!out) throw std::runtime_error("cant open the path: " + cfg.art.turn_cdfs.string());
 
-    DataHeader turn_cdf_header{static_cast<uint64_t>(total_turns), cfg.turn_buckets, sizeof(int)};
+    MatrixHeader turn_cdf_header{static_cast<uint64_t>(total_turns), cfg.turn_buckets, sizeof(int)};
     out.write(reinterpret_cast<const char*>(&turn_cdf_header), sizeof(turn_cdf_header));
 
     std::array<bool, 52> missing;

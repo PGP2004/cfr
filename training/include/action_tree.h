@@ -17,29 +17,31 @@ struct ActionNode{
 
 class ActionTree{
 
-private: 
-    void dfs_tree(GameState& state, std::mt19937& rng);
-
+private:
+    std::vector<Action> get_legal_actions(const GameState& state);
+    
 public:
-
     std::vector<ActionNode> nodes;
     size_t root_idx;
     size_t cur_idx;
 
-    ActionTree(GameState& root_state);
+    ActionTree(const GameState& root_state);
+    void undo_action();
+    void apply_action(size_t action_idx);
 
-    std::vector<Action> get_legal_actions(GameState& state);
+    int get_player() const{
+        return nodes[cur_idx].active_player;
+    };
 
-    void undo_action(){
-        cur_idx = nodes[cur_idx].parent_idx;
+    int get_street() const {
+        return nodes[cur_idx].street_idx;
+    };
+
+    bool is_terminal() const {
+        return nodes[cur_idx].street_idx == 8;
     }
 
-    void apply_action(size_t action_idx){
-        if (action_idx >= nodes[cur_idx].child_idxs.size()){
-             throw std::out_of_range("the idx is out of range");
-        }
-
-        cur_idx = nodes[cur_idx].child_idxs[action_idx];
-        return;
+    bool is_root_node() const{
+        return root_idx == cur_idx;
     }
 };

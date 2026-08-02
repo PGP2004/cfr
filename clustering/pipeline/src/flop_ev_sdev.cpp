@@ -1,5 +1,5 @@
 #include "pipeline.h"
-#include "dataloader.h"
+#include "matrix_loader.h"
 
 #include <cmath>
 #include <cstdint>
@@ -86,6 +86,6 @@ void run_flop_ev_sdev(const PipelineConfig& cfg) {
         output[o_idx + 1] = sdev;
     }
 
-    DataHeader output_header{num_flops, 2, sizeof(int)};
+    MatrixHeader output_header{num_flops, 2, sizeof(int)};
     write_matrix_and_header<int>(cfg.art.flop_ev_sdev.string(), output_header, output);
 }

@@ -8,25 +8,26 @@
 #include <stdexcept>   
 #include <ios>         
 
-struct DataHeader{
-    uint64_t num_rows;
+/// @brief Header used to store information for storing and retrieving matrices
+struct MatrixHeader{
+    uint64_t num_rows; 
     uint64_t num_cols;
     uint64_t bytes_per_elt;
-    bool operator==(const DataHeader&) const = default;
+    bool operator==(const MatrixHeader&) const = default;
 
     std::string to_string() const {
-        return "DataHeader{num_rows=" + std::to_string(num_rows)
+        return "MatrixHeader{num_rows=" + std::to_string(num_rows)
         + ", num_cols=" + std::to_string(num_cols)
         + ", bytes_per_elt=" + std::to_string(bytes_per_elt) + "}";
     }
 };
 
 template <typename T>
-std::pair<std::vector<T>, DataHeader> load_matrix_and_header(const std::string& result_path) {
+std::pair<std::vector<T>, MatrixHeader> load_matrix_and_header(const std::string& result_path) {
     std::ifstream in(result_path, std::ios::binary);
     if (!in) throw std::runtime_error("cannot open " + result_path);
 
-    DataHeader header;
+    MatrixHeader header;
     in.read(reinterpret_cast<char*>(&header), sizeof(header));
 
     if (in.gcount() != static_cast<std::streamsize>(sizeof(header))) throw std::runtime_error("missing header");
@@ -47,7 +48,7 @@ std::pair<std::vector<T>, DataHeader> load_matrix_and_header(const std::string& 
 }
 
 template <typename T>
-inline void write_matrix_and_header(const std::string& write_path, DataHeader header, const std::vector<T>& results) {
+inline void write_matrix_and_header(const std::string& write_path, MatrixHeader header, const std::vector<T>& results) {
 
     if (std::filesystem::exists(write_path)) throw std::runtime_error("write path already exists");
 
