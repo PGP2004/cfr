@@ -1,47 +1,42 @@
-#include <array>
+#include "pipeline_config.h"
 #include "dataloader.h"
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <filesystem>
-#include <chrono>
-#include <iomanip>
-#include <cmath> 
 
-namespace fs = std::filesystem;
+#include <cmath>
+#include <cstdint>
+#include <iostream>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
 using namespace std;
 
-struct Params{
-    size_t num_pdfs;
-    size_t num_buckets;
-};
-
-void cdfs_to_pdfs(const Params params, vector<uint8_t>& cdfs){
+void cdfs_to_pdfs(size_t num_centers, size_t num_buckets, vector<int>& cdfs) {
     //write over the cdfs to get pdfs;
-    for (size_t c = 0; c < params.num_pdfs; ++c){
-        for (size_t i = params.num_buckets - 1 ; i >=1; --i){
-            size_t idx = params.num_buckets * c + i;
-            cdfs[idx] = cdfs[idx] - cdfs[idx-1];
+    for (size_t c = 0; c < num_centers; ++c) {
+        for (size_t i = num_buckets - 1; i >= 1; --i) {
+            size_t idx = num_buckets * c + i;
+            cdfs[idx] = cdfs[idx] - cdfs[idx - 1];
         }
     }
 }
 
-pair<uint8_t, uint8_t> get_ev_and_sdev(Params p, vector<uint16_t>&atom_vec, const vector<uint8_t>& pdfs, vector<float>& buff){
+pair<int, int> get_ev_and_sdev(size_t num_buckets, vector<int>& multiset,
+                               const vector<int>& centers, vector<float>& buff) {
 
-    buff.resize(p.num_buckets);
-    for (size_t i = 0; i < p.num_buckets; ++i) buff[i] = 0.0;
+    buff.resize(num_buckets);
+    for (size_t i = 0; i < num_buckets; ++i) buff[i] = 0.0;
 
     //num buckets is the number of buckets over which we chop up the [0,100] strength interval.
     //Bucket sizes are uniform.
-    //the atom vec is a sparse representation over a set of pdfs, given by the pdfs vector.
+    //the multiset is a sparse representation of a distribution over the centers
     //Aggregate the distribution over turns into just a distributino over strengths
 
     float total = 0.0;
-    for (uint16_t c : atom_vec){
-        size_t ctr_idx = c*p.num_buckets;
-        for (size_t i = 0; i < p.num_buckets; ++i){
-            buff[i] += static_cast<float>(pdfs[ctr_idx + i]);
-            total += static_cast<float>(pdfs[ctr_idx + i]);
+    for (int c : multiset) {
+        size_t ctr_idx = static_cast<size_t>(c) * num_buckets;
+        for (size_t i = 0; i < num_buckets; ++i) {
+            buff[i] += static_cast<float>(centers[ctr_idx + i]);
+            total += static_cast<float>(centers[ctr_idx + i]);
         }
     }
 
@@ -49,65 +44,50 @@ pair<uint8_t, uint8_t> get_ev_and_sdev(Params p, vector<uint16_t>&atom_vec, cons
     float sdev = 0;
     //get the std_dev by first computing E(X^2) then subtracting E(X)^2 and taking sqrt root.
 
-    for (size_t i = 0; i < p.num_buckets; ++i){
-        float prob = buff[i]/total;
-        float wt = (100.0/static_cast<float>(p.num_buckets))*(i+0.5);
-        ev += wt*prob;
-        sdev += wt*wt*prob;
+    for (size_t i = 0; i < num_buckets; ++i) {
+        float prob = buff[i] / total;
+        float wt = (100.0 / static_cast<float>(num_buckets)) * (i + 0.5);
+        ev += wt * prob;
+        sdev += wt * wt * prob;
     }
 
-    sdev += -(ev*ev);
+    sdev += -(ev * ev);
     sdev = sqrt(sdev);
 
-    pair<uint8_t, uint8_t> output = {static_cast<uint8_t>(ev), static_cast<uint8_t>(sdev)};
+    pair<int, int> output = {static_cast<int>(ev), static_cast<int>(sdev)};
     return output;
 }
 
-void write_ev_and_sdev(const string& turn_cdfs_path, const string& flop_pdfs_path,
-const string& write_path) {
+void run_flop_ev_sdev(const PipelineConfig& cfg) {
+    const size_t num_centers = cfg.turn_clusters;
+    const size_t num_buckets = cfg.turn_buckets;
 
-    auto [pdfs, pdfs_header] = load_matrix_and_header<uint8_t>(turn_cdfs_path);
-    size_t num_pdfs = static_cast<size_t>(pdfs_header.num_rows);
-    size_t num_buckets = static_cast<size_t>(pdfs_header.num_cols);
-    Params params{num_pdfs, num_buckets};
-    cdfs_to_pdfs(params, pdfs);
+    auto [centers, centers_header] = load_matrix_and_header<int>(cfg.art.turn_cdf_centers.string());
+    if (centers_header.num_rows != num_centers || centers_header.num_cols != num_buckets)
+        throw runtime_error("turn_cdf_centers shape does not match config: " + centers_header.to_string());
 
-    cout << "loaded the cdfs" << endl;
+    cdfs_to_pdfs(num_centers, num_buckets, centers);
 
-    auto [atoms, atoms_header] = load_matrix_and_header<uint16_t>(flop_pdfs_path);
-    size_t num_flops = static_cast<size_t>(atoms_header.num_rows);
-    size_t atoms_per_flop = static_cast<size_t>(atoms_header.num_cols);
+    auto [multisets, multisets_header] = load_matrix_and_header<int>(cfg.art.flop_multisets.string());
+    size_t num_flops = static_cast<size_t>(multisets_header.num_rows);
+    size_t multiset_size = static_cast<size_t>(multisets_header.num_cols);
 
-    vector<uint16_t> atoms_buff(atoms_per_flop, 0);
+    vector<int> multiset_buff(multiset_size, 0);
     vector<float> prob_buff(num_buckets, 0.0);
+    vector<int> output(2 * num_flops, 0);
 
-    vector<uint8_t> output(2*num_flops, 0.0);
-
-    for (size_t i = 0; i < num_flops; ++i){
-        size_t idx = atoms_per_flop*i;
-        for (size_t j = 0; j < atoms_per_flop; ++j){
-            atoms_buff[j] = atoms[idx+j];
+    for (size_t i = 0; i < num_flops; ++i) {
+        size_t idx = multiset_size * i;
+        for (size_t j = 0; j < multiset_size; ++j) {
+            multiset_buff[j] = multisets[idx + j];
         }
 
-        auto [ev, sdev] = get_ev_and_sdev(params, atoms_buff, pdfs, prob_buff);
-        size_t o_idx = 2*i;
+        auto [ev, sdev] = get_ev_and_sdev(num_buckets, multiset_buff, centers, prob_buff);
+        size_t o_idx = 2 * i;
         output[o_idx] = ev;
-        output[o_idx+1] = sdev;
+        output[o_idx + 1] = sdev;
     }
 
-    DataHeader output_header{num_flops, 2, sizeof(uint8_t)};
-    write_matrix_and_header(write_path, output_header, output);
+    DataHeader output_header{num_flops, 2, sizeof(int)};
+    write_matrix_and_header<int>(cfg.art.flop_ev_sdev.string(), output_header, output);
 }
-
-int main(int, char** argv) {
-    cout << "Started" << endl;
-    fs::path exe = fs::weakly_canonical(fs::path(argv[0]));
-    fs::path root = exe.parent_path().parent_path().parent_path();                
-    fs::path storage = root / "storage";
-
-    write_ev_and_sdev((storage / "turn_cdf_centers").string(),
-        (storage / "sparse_flop_pdfs").string(), (storage / "flop_ev_sdev").string());
-
-    cout << "Finished" << endl;
-}
-

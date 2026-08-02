@@ -8,8 +8,6 @@
 #include <span>
 
 using namespace std;
-
-
 namespace L1{
 
 void update_assignments_and_counts(const ClusteringParams& params, ClusterBuffer& c_buff, const vector<int>& pts) {

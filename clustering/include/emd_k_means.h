@@ -10,7 +10,7 @@
 /**
  * @file emd_k_means.h
  * @brief Approximate Earth Movers Distance (EMD) version of k-means clustering for
- * sparsely encoded multisets over fully connected weighted graphs. This is an implementation of algorithm two of the paper "Potential-Aware Imperfect-Recall
+ * pdfs encoded multisets over fully connected weighted graphs. This is an implementation of algorithm two of the paper "Potential-Aware Imperfect-Recall
  * Abstraction with Earth Mover’s Distance in Imperfect-Information Games"
  * which can be found here: https://www.cs.cmu.edu/~sandholm/potential-aware_imperfect-recall.aaai14.multiset
  * I recomend reading the paper before the code.
@@ -23,7 +23,7 @@
  * 
  * Center encoding: centers are also distributions over the graph's vertices. 
  * @warning Centers are stored differently from points.
- * A center is stored sparsely as a pair of parallel vectors (wts, verts), which tell
+ * A center is stored as a pair of parallel vectors (wts, verts), which tell
  * us that the center places mass wts[i] on vertex verts[i], and zero on vertices absent from verts.
  */
  
@@ -76,7 +76,7 @@ struct Params{
     // We quantize each center to have a supports of size = center_support
     size_t center_support;
 
-    size_t multiset_size; // The size of vectors providing sparse representations of multisets
+    size_t multiset_size; // The size of the multisets
     size_t num_multisets; // number of multisets we are clustering
 
     // weight_matrix[i,j] = weight of edge from vertex i to vertex j. 
@@ -94,11 +94,11 @@ void fill_emd_cache(const Params& params, const Center& ctr, EMDCache& emd_cache
 /// @brief Approximately computes and returns EMD distance between center and multiset
 float approx_EMD(const Params& params, const Center& ctr, std::span<const int> multiset, const EMDCache& emd_cache, EMDScratch& emd_scratch);
 
-/// @brief Quantizes a dense, unnormalized multiset over the vertices into a sparse Center.
-// then takes the params.center_support vertices with the largest counts and normalizes
+/// @brief Quantizes a dense, unnormalized multiset over the vertices into a Center.
+/// then takes the params.center_support vertices with the largest counts and normalizes
 /// their counts to sum to 1 and writes this result into ctr.verts and ctr.wts.
-/// @param dense_rep Dense vector of length params.num_verts, where sparse_rep[v] is the count of vertex v. 
-/// @warning undefined stuff happens if params.center_support > sparse_rep.size().
+/// @param dense_rep Dense vector of length params.num_verts, where dense_rep[v] is the count of vertex v. 
+/// @warning undefined stuff happens if params.center_support > dense_rep.size().
 void clipped_dense_center(const Params& params, Center& ctr, const std::vector<int>& dense_rep);
 
 
@@ -120,7 +120,7 @@ void update_grouped(const Params& params, ClusterBuffer& c_buff, const std::vect
 /// is the number of vertices and coordinate v holds the probability assigned to
 /// vertex v. The center is the coordinate-wise mean of the cluster's points in
 /// this embedding, truncated to its `params.center_support` largest coordinates
-/// and renormalized to a distribution and storing it in the sparse center representation
+/// and renormalized to a distribution and storing it in our center representation
 /// @note This is NOT computing the EMD centroid of the multisets. But its close enough that we still 
 /// get decent clustering nonetheless! 
 /// @note Right now I re-initialize a center iff the cluster for that center is empty.
@@ -155,7 +155,7 @@ bool clustering_step(const Params& params, ClusterBuffer& c_buff, const std::vec
 /// @brief Runs an approximately EMD k means style clustering algorithm on multisets over vertices in finite graphs
 /// @param params Encodes the settings for the quantization algorithm
 /// @param multisets Sparsely encoded multisets we wish to cluster
-///@throw Runtime error if multisets.size() != params.num_pds*params.multiset_size
+///@throw Runtime error if multisets.size() != params.num_mutlisets*params.multiset_size
 /// @return {assignments, centers}
 /// assignments[i] is the cluster to which the i^th point is assigned
 /// centers - Flattened array of the "params.num_clusters" centroids of each cluster
