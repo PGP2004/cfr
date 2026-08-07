@@ -93,7 +93,8 @@ void reinit_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const
 
     for (size_t c = 0; c < reinit.size(); ++c) {
         if (!reinit[c]) continue;
-        size_t r = pick(params.rng);                      
+        size_t r = pick(params.rng);     
+
         for (size_t j = 0; j < params.dim; ++j)
             c_buff.centers[c * params.dim + j] = pts[r * params.dim + j];
     }
@@ -136,7 +137,7 @@ void init_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const v
             span<const int>ctr_span(&c_buff.centers[(c-1) * params.dim], params.dim);
             int dist = L1_dist(pt_span, ctr_span);
            
-            if (dist < min_d_cache[p]) min_d_cache[p] = dist;
+            if (dist < min_d_cache[p]) min_d_cache[p] = dist*dist;
             total += min_d_cache[p];
         }
 

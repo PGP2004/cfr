@@ -199,11 +199,12 @@ namespace emd{
            c_buff.centers[ctr].verts.assign(params.center_support, 0);
            c_buff.centers[ctr].wts.assign(params.center_support, 0.0);
 
-            size_t multiset = pick(params.rng);                      
-            for (size_t j = 0; j < params.multiset_size; ++j){
-               c_buff.centers[ctr].verts[j] = multisets[multiset * params.multiset_size + j];
-               c_buff.centers[ctr].verts[j] = 1.0/static_cast<float>(params.multiset_size);
-            }
+            size_t multiset = pick(params.rng); 
+
+            std::vector<int> dense_rep(params.num_verts, 0);
+            for (size_t j = 0; j < params.multiset_size; ++j)
+                dense_rep[multisets[multiset * params.multiset_size + j]] += 1;
+            clipped_dense_center(params, c_buff.centers[ctr], dense_rep);
         }
     }  
 
@@ -212,6 +213,7 @@ namespace emd{
         //heuristic initialization ofc_buff.centers 
         
         c_buff.centers.resize(params.num_clusters);
+        std::vector<int> dense_rep(params.num_verts, 0);
 
         uniform_int_distribution<size_t> upto(0, params.num_multisets -1 );
         size_t first_center = upto(params.rng);
@@ -223,9 +225,10 @@ namespace emd{
         }
 
         for (size_t j = 0; j < params.multiset_size; ++j){
-           c_buff.centers[0].verts[j] = multisets[first_center * params.multiset_size + j];
-           c_buff.centers[0].wts[j] = 1.0/static_cast<float>(params.multiset_size);
+            dense_rep[multisets[first_center * params.multiset_size + j]] += 1;
         }
+        
+        clipped_dense_center(params, c_buff.centers[0], dense_rep);
 
         c_buff.min_dists.assign(params.num_multisets, numeric_limits<float>::max());
 
@@ -261,10 +264,10 @@ namespace emd{
                 }
             }
 
-            for (size_t i = 0; i < params.multiset_size; ++i){
-               c_buff.centers[ctr].verts[i] = multisets[chosen * params.multiset_size + i];
-               c_buff.centers[ctr].wts[i] = 1.0/static_cast<float>(params.multiset_size);
+            for (size_t j = 0; j < params.multiset_size; ++j){
+                dense_rep[multisets[chosen * params.multiset_size + j]] += 1;
             }
+            clipped_dense_center(params, c_buff.centers[ctr], dense_rep);
         }
 
     }

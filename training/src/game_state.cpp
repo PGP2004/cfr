@@ -13,25 +13,6 @@
 #include <utility>  
 
 
-std::array<double, 2> get_equities(const std::array<std::array<uint8_t, 7>, 2>& hands) {
-    uint8_t r0[7], s0[7];
-    uint8_t r1[7], s1[7];
-
-    for (int i = 0; i < 7; ++i) {
-        uint8_t c0 = hands[0][i];
-        uint8_t c1 = hands[1][i];
-        r0[i] = card_rank(c0);  s0[i] = card_suit(c0);
-        r1[i] = card_rank(c1);  s1[i] = card_suit(c1);
-    }
-
-    uint32_t score0 = evaluate_raw(r0, s0, 7);
-    uint32_t score1 = evaluate_raw(r1, s1, 7);
-
-    if (score0 > score1) return {1.0, 0.0};
-    if (score1 > score0) return {0.0, 1.0};
-    return {0.5, 0.5};
-}
-
 static void deal_hands(std::mt19937& rng, std::array<std::array<uint8_t, 7>, 2>& hands) {
     //deck object created just once
     static std::array<int, 52> deck = []{
@@ -70,27 +51,6 @@ GameState::GameState(){
     hands[0].fill(-1);
     hands[1].fill(-1);
 }
-
-double GameState::get_reward(int player) const {
-    if (!is_terminal_node()) throw std::logic_error("Cannot assign rewards from non-terminal state");
-    if (player != 0 && player != 1) throw std::logic_error("The player index must be one of 1 or 0");
-
-    Action fold_action = {0,0};
-    double reward = (stacks[player] - starting_stack);
-
-    if (last_action == fold_action){
-        bool won = (active_player == player);
-        if (won){
-            reward += static_cast<double>(pot);
-        }
-        return reward;
-    }
-
-    std::array<double, 2> equities = get_equities(hands);
-    reward += equities[player]*static_cast<double>(pot);
-    return reward;
-}
-
 
 bool GameState::is_legal_action(const Action& action) const {
   

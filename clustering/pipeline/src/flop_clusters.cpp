@@ -8,7 +8,7 @@
 using namespace std;
 
 void run_flop_clusters(const PipelineConfig& cfg) {
-    auto [raw_reps, rep_header] = load_matrix_and_header<uint16_t>(cfg.art.flop_multisets.string());
+    auto [raw_reps, rep_header] = load_matrix_and_header<int>(cfg.art.flop_multisets.string());
     auto [dist_matrix, dist_header] = load_matrix_and_header<int>(cfg.art.turn_distance_matrix.string());
 
     emd::Params params{
@@ -26,22 +26,22 @@ void run_flop_clusters(const PipelineConfig& cfg) {
     auto [assignments, ctrs] = emd::emd_k_means(params, multisets);
 
     vector<float> wts;
-    vector<uint16_t> verts;
+    vector<int> verts;
     wts.reserve(ctrs.size() * cfg.flop_center_support);
     verts.reserve(ctrs.size() * cfg.flop_center_support);
 
     for (const emd::Center& ctr : ctrs) {
         for (size_t i = 0; i < ctr.verts.size(); ++i) {
             wts.push_back(ctr.wts[i]);
-            verts.push_back(static_cast<uint16_t>(ctr.verts[i]));
+            verts.push_back(static_cast<int>(ctr.verts[i]));
         }
     }
 
     MatrixHeader wts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(float)};
     write_matrix_and_header<float>(cfg.art.flop_ctrs_wts.string(), wts_header, wts);
 
-    MatrixHeader verts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(uint16_t)};
-    write_matrix_and_header<uint16_t>(cfg.art.flop_ctrs_verts.string(), verts_header, verts);
+    MatrixHeader verts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(int)};
+    write_matrix_and_header<int>(cfg.art.flop_ctrs_verts.string(), verts_header, verts);
 
     MatrixHeader assignment_header{assignments.size(), 1, sizeof(int)};
     write_matrix_and_header<int>(cfg.art.flop_assignments.string(), assignment_header, assignments);

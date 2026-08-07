@@ -50,7 +50,6 @@ double CFR::traverse_helper(int player) {
         action_tree.undo_action();
 
         return util;
-
     }
     // Branch where active player = current player
     InfoKey ikey = get_InfoKey(action_tree, dealer);

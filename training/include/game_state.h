@@ -34,8 +34,6 @@ public:
 
     GameState apply_chance(std::mt19937& rng);
 
-    double get_reward(int player) const;
-
     bool is_legal_action(const Action& action) const;
 
     //this is jank, should fix!

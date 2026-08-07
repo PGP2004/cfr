@@ -17,7 +17,7 @@ void run_turn_clusters(const PipelineConfig& cfg) {
     if (fs::exists(cfg.art.turn_assignments))
         throw std::runtime_error("write path already exists: " + cfg.art.turn_assignments.string());
 
-    auto [raw_cdfs, cdf_header] = load_matrix_and_header<uint8_t>(cfg.art.turn_cdfs.string());
+    auto [raw_cdfs, cdf_header] = load_matrix_and_header<int>(cfg.art.turn_cdfs.string());
     std::vector<int> cdfs(raw_cdfs.begin(), raw_cdfs.end());
 
     L1::ClusteringParams params{
