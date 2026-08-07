@@ -173,6 +173,7 @@ namespace emd{
             } 
 
             size_t end = running + c_buff.counts[ctr]*params.multiset_size;
+
             for (size_t i = running; i < end; ++i){
                 dense_rep[c_buff.grouped[i]] += 1;
             }
@@ -188,7 +189,7 @@ namespace emd{
         const vector<int>& multisets, const vector<bool>& reinit) {
 
         //fully randomized reinitialize. Should prolly do better at some point
-
+        std::vector<int> dense_rep;
         size_t num_multisets = multisets.size() / params.multiset_size;  
         uniform_int_distribution<size_t> pick(0, num_multisets - 1);
 
@@ -201,7 +202,8 @@ namespace emd{
 
             size_t multiset = pick(params.rng); 
 
-            std::vector<int> dense_rep(params.num_verts, 0);
+
+            dense_rep.assign(params.num_verts, 0);
             for (size_t j = 0; j < params.multiset_size; ++j)
                 dense_rep[multisets[multiset * params.multiset_size + j]] += 1;
             clipped_dense_center(params, c_buff.centers[ctr], dense_rep);
@@ -213,7 +215,7 @@ namespace emd{
         //heuristic initialization ofc_buff.centers 
         
         c_buff.centers.resize(params.num_clusters);
-        std::vector<int> dense_rep(params.num_verts, 0);
+        std::vector<int> dense_rep;
 
         uniform_int_distribution<size_t> upto(0, params.num_multisets -1 );
         size_t first_center = upto(params.rng);
@@ -224,10 +226,11 @@ namespace emd{
            c_buff.centers[i].wts.assign(params.center_support, 0.0);
         }
 
+        dense_rep.assign(params.num_verts, 0);
         for (size_t j = 0; j < params.multiset_size; ++j){
             dense_rep[multisets[first_center * params.multiset_size + j]] += 1;
         }
-        
+
         clipped_dense_center(params, c_buff.centers[0], dense_rep);
 
         c_buff.min_dists.assign(params.num_multisets, numeric_limits<float>::max());
@@ -263,7 +266,8 @@ namespace emd{
                     break;
                 }
             }
-
+            
+            dense_rep.assign(params.num_verts, 0);
             for (size_t j = 0; j < params.multiset_size; ++j){
                 dense_rep[multisets[chosen * params.multiset_size + j]] += 1;
             }

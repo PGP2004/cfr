@@ -58,8 +58,8 @@ static void write_hand_ids(hands_t& hands, hand_ids_t& hand_ids){
 }
 
 static int get_winner(hands_t& hands) {
-    static uint8_t r0[7], s0[7];
-    static uint8_t r1[7], s1[7];
+    uint8_t r0[7], s0[7];
+    uint8_t r1[7], s1[7];
 
     for (int i = 0; i < 7; ++i) {
         uint8_t c0 = hands[0][i];
@@ -74,7 +74,7 @@ static int get_winner(hands_t& hands) {
     if (score0 > score1) return 0;
     else if (score1 > score0) return 1;
     return -1;
-};
+}
 
 void Dealer::deal(std::mt19937& rng){
     write_hands(rng, hands);
@@ -99,8 +99,8 @@ double Dealer::get_reward(int player, const ActionTree& at){
 
     // if no one folded in the game. Look at the equities
     if (winner == -1) return 0.0;
-    else if (winner == 1) return at.get_payoff(player);
-    else if (winner == 0) return - at.get_payoff(opp);
+    else if (winner == player) return at.get_payoff(player);
+    else if (winner == opp) return - at.get_payoff(opp);
 
     throw std::runtime_error("Should not be able to get here");
     return 0.0;

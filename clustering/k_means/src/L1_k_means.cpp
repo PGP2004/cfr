@@ -136,8 +136,9 @@ void init_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const v
             span<const int>pt_span(&pts[p * params.dim], params.dim);
             span<const int>ctr_span(&c_buff.centers[(c-1) * params.dim], params.dim);
             int dist = L1_dist(pt_span, ctr_span);
-           
-            if (dist < min_d_cache[p]) min_d_cache[p] = dist*dist;
+
+            int dist_sq = dist*dist;
+            if (dist_sq < min_d_cache[p]) min_d_cache[p] = dist_sq;
             total += min_d_cache[p];
         }
 
