@@ -15,20 +15,16 @@ CFR::CFR(CardBuckets& buckets, ActionTree& action_tree):
     card_buckets(buckets), 
     action_tree(action_tree),
     infosets(action_tree, buckets.cluster_counts){
-
-    dealer = Dealer();
     VectorPool::preallocate(4, 200);
     iters_per_discount = 1000;
 }
 
 
-InfoKey CFR::get_InfoKey(const ActionTree& at, const Dealer& cur_dealer) {
-    int player = at.active_player();
+InfoKey CFR::get_InfoKey(const ActionTree& at, const Dealer& d) {
+    const TreeNode& n = at.nodes[at.cur_idx];
     int street = at.street();
-    int hand_id = cur_dealer.get_hand_id(player, street);
-    int hand_cluster = card_buckets.cluster_of(street, hand_id);  
-    InfoKey ikey(at.nodes[at.cur_idx], hand_cluster);
-    return ikey;
+    int hand_id = d.get_hand_id(at.active_player(), street);
+    return {n.node_idx, (size_t)card_buckets.cluster_of(street, hand_id), n.child_idxs.size()};
 }
 
 double CFR::traverse_helper(int player) {
@@ -48,7 +44,7 @@ double CFR::traverse_helper(int player) {
         infosets.get_regret_strategy(ikey, probs);
         infosets.update_strategy(ikey, probs); 
 
-        size_t sampled_idx = infosets.sample_regret(ikey, rng, probs);
+        size_t sampled_idx = infosets.sample_regret(rng, probs);
         action_tree.apply_action(sampled_idx);
         double util = traverse_helper(player);
         action_tree.undo_action();
@@ -64,12 +60,11 @@ double CFR::traverse_helper(int player) {
     std::vector<double>& action_deltas = delta_buf.get();
 
     infosets.get_regret_strategy(ikey, probs);
-    size_t num_actions = ikey.get_num_actions();
-    action_deltas.assign(num_actions, 0.0);
+    action_deltas.assign(ikey.num_actions, 0.0);
 
     double node_util = 0.0;
 
-    for (size_t i = 0; i < num_actions; i++) {
+    for (size_t i = 0; i < ikey.num_actions; i++) {
 
         action_tree.apply_action(i);
         double action_util = traverse_helper(player);

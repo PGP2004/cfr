@@ -22,7 +22,7 @@ class CFR {
         int iters_per_discount;
 
         InfoSets infosets;
-        InfoKey get_InfoKey(const ActionTree& at, const Dealer& cur_dealer);
+        InfoKey get_InfoKey(const ActionTree& at, const Dealer& d);
         double traverse_helper(int player);
         void traverse(int player);
 

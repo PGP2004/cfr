@@ -33,7 +33,8 @@ PublicState ActionTree::get_public_state(const GameState& state){
         .street_idx = state.get_street(),
         .active_player = state.get_active_player(),
         .payoffs = {state.get_payoff(0), state.get_payoff(1)},
-        .folded = state.player_folded()
+        .folded = state.player_folded(),
+        .edge_labels = {}
     };
 
     return pub_state;

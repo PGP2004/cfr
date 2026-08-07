@@ -9,12 +9,9 @@
 #include <random>
 
 struct InfoKey {
-    const TreeNode& node;
+    size_t node_idx;
     size_t cluster_idx;
-
-    inline size_t get_num_actions() const{
-        return node.child_idxs.size();
-    }
+    size_t num_actions;
 };
 
 class InfoSets {
@@ -27,12 +24,12 @@ private:
     int last_t = 0;
 
     inline size_t get_offset(const InfoKey& ikey)  const{
-        return offsets[ikey.node.node_idx] + ikey.cluster_idx*ikey.get_num_actions();
+        return offsets[ikey.node_idx] + ikey.cluster_idx*ikey.num_actions;
     }
 
 public:
 
-    explicit InfoSets(const ActionTree& action_tree, const std::vector<size_t> cluster_counts);
+    explicit InfoSets(const ActionTree& action_tree, const std::vector<size_t>& cluster_counts);
 
     void update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas);
 
@@ -40,7 +37,7 @@ public:
 
     void get_regret_strategy(const InfoKey& ikey, std::vector<double>& output) const;
 
-    size_t sample_regret(const InfoKey& ikey, std::mt19937& rng, std::vector<double>& probs) const;
+    size_t sample_regret(std::mt19937& rng, std::vector<double>& probs) const;
 
     void discount(int t);
 

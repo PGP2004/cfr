@@ -52,7 +52,7 @@ struct CardBuckets {
         cluster_counts.push_back(count_clusters(river_clusters));
     }
 
-    int cluster_of(int street, int hand_id) const {
+    size_t cluster_of(int street, int hand_id) const {
         if (street == 0) return preflop_clusters[hand_id];
         if (street == 1) return flop_clusters[hand_id];
         if (street == 2) return turn_clusters[hand_id];

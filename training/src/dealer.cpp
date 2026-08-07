@@ -30,13 +30,13 @@ static void write_hands(std::mt19937& rng, hands_t& hands) {
 
     size_t count = 2;
     for (int i = 4; i < 9; ++i) {
-    hands[0][count] = deck[i];
-    hands[1][count] = deck[i];
+        hands[0][count] = deck[i];
+        hands[1][count] = deck[i];
         count += 1;
     }
 }
 
-static void write_hand_ids(hands_t& hands, hand_ids_t hand_ids){
+static void write_hand_ids(hands_t& hands, hand_ids_t& hand_ids){
 
     static const std::array<uint8_t, 1> preflop_counts = {2};
     static const std::array<uint8_t, 2> flop_counts = {2, 3};
@@ -57,9 +57,9 @@ static void write_hand_ids(hands_t& hands, hand_ids_t hand_ids){
 
 }
 
-void write_equities(hands_t& hands, std::array<double,2>& equities) {
-    uint8_t r0[7], s0[7];
-    uint8_t r1[7], s1[7];
+static int get_winner(hands_t& hands) {
+    static uint8_t r0[7], s0[7];
+    static uint8_t r1[7], s1[7];
 
     for (int i = 0; i < 7; ++i) {
         uint8_t c0 = hands[0][i];
@@ -71,22 +71,18 @@ void write_equities(hands_t& hands, std::array<double,2>& equities) {
     uint32_t score0 = evaluate_raw(r0, s0, 7);
     uint32_t score1 = evaluate_raw(r1, s1, 7);
 
-    if (score0 > score1){
-        equities[0] = 1.0; equities[1] = 0.0;
-    } else if (score1 > score0){
-        equities[0] = 0.0; equities[1] = 1.0;
-    } else{
-        equities[0] = 0.5; equities[1] = 0.5;
-    }
+    if (score0 > score1) return 0;
+    else if (score1 > score0) return 1;
+    return -1;
 };
 
 void Dealer::deal(std::mt19937& rng){
     write_hands(rng, hands);
     write_hand_ids(hands, hand_ids);
-    write_equities(hands, equities);
+    winner = get_winner(hands);
 }
 
-double Dealer::get_reward(int player, ActionTree& at){
+double Dealer::get_reward(int player, const ActionTree& at){
 
     if (!at.is_terminal()){
         throw std::runtime_error("cannot get reward for non-terminal node");
@@ -102,9 +98,9 @@ double Dealer::get_reward(int player, ActionTree& at){
     }
 
     // if no one folded in the game. Look at the equities
-    if (equities[player] == 0.5) return 0.0;
-    else if (equities[player] == 1.0) return at.get_payoff(player);
-    else if (equities[player] == 0.0) return - at.get_payoff(opp);
+    if (winner == -1) return 0.0;
+    else if (winner == 1) return at.get_payoff(player);
+    else if (winner == 0) return - at.get_payoff(opp);
 
     throw std::runtime_error("Should not be able to get here");
     return 0.0;

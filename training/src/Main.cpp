@@ -16,8 +16,8 @@ int run_training(char** argv){
     fs::path storage = root / "clustering/storage";
 
     CardBuckets abs((storage / "flop_assignments").string(),
-                        (storage / "turn_assignments").string(),
-                        (storage / "river_strengths").string());
+        (storage / "turn_assignments").string(),
+        (storage / "river_strengths").string());
 
     GameState init_state;
     ActionTree at(init_state);

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cmath>
 
-InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t> cluster_counts) {
+InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t>& cluster_counts) {
 
     size_t cum_total = 0;
 
@@ -26,7 +26,7 @@ InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t> clus
 void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas) {
 
     size_t offset = get_offset(ikey);
-    size_t n = ikey.get_num_actions();
+    size_t n = ikey.num_actions;
 
     if (n != action_deltas.size()) {
         throw std::invalid_argument("Action_deltas and regret_sum must have the same size");
@@ -40,7 +40,7 @@ void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& act
 void InfoSets::update_strategy(const InfoKey& ikey , std::vector<double>& cur_strat) {
 
     size_t offset = get_offset(ikey);
-    size_t n = ikey.get_num_actions();
+    size_t n = ikey.num_actions;
 
     if (n != cur_strat.size()) throw std::logic_error("size mismatch");
 
@@ -52,7 +52,7 @@ void InfoSets::update_strategy(const InfoKey& ikey , std::vector<double>& cur_st
 void InfoSets::get_regret_strategy(const InfoKey& ikey, std::vector<double>& output) const{
 
     size_t offset = get_offset(ikey);
-    size_t n = ikey.get_num_actions();
+    size_t n = ikey.num_actions;
     
     output.resize(n);
 
@@ -70,9 +70,7 @@ void InfoSets::get_regret_strategy(const InfoKey& ikey, std::vector<double>& out
     }
 }
 
-size_t InfoSets::sample_regret(const InfoKey& ikey, std::mt19937& rng, std::vector<double>& probs) const {
-
-    get_regret_strategy(ikey ,probs);
+size_t InfoSets::sample_regret( std::mt19937& rng, std::vector<double>& probs) const {
 
     std::uniform_real_distribution<double> unif(0.0, 1.0);
     double r = unif(rng);
