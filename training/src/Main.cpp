@@ -21,8 +21,7 @@ int run_training(char** argv){
 
     GameState init_state;
     ActionTree at(init_state);
-
-    CFR cfr(init_state, abs, at);
+    CFR cfr(abs, at);
 
     int iters = 500000;
     cfr.train(iters, 0);

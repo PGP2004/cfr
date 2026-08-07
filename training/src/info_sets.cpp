@@ -23,7 +23,6 @@ InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t> clus
     strategy_sum.assign(cum_total, 0.0);
 }
 
-
 void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas) {
 
     size_t offset = get_offset(ikey);
@@ -69,7 +68,6 @@ void InfoSets::get_regret_strategy(const InfoKey& ikey, std::vector<double>& out
         double uniform = 1.0 / n;
         for (size_t i = 0; i < n; i++) output[i] = uniform;
     }
-
 }
 
 size_t InfoSets::sample_regret(const InfoKey& ikey, std::mt19937& rng, std::vector<double>& probs) const {
@@ -97,27 +95,3 @@ void InfoSets::discount(int t) {
     for (double& s : strategy_sum) s *= f;
     last_t = t;
 }
-
-// std::vector<std::pair<Action, double>> InfoSets::get_average_strategy(const InfoKey& ikey) const{
-
-//     std::vector<std::pair<Action, double>> output;
-
-//     size_t offset = get_offset(ikey);
-//     size_t n = ikey.get_num_actions();
-//     output.resize(n);
-
-//     double sum = 0.0;
-//     for (size_t i = 0 ; i < n; ++i){
-//         sum += strategy_sum[offset+i];
-//     }
-
-//     if (sum <= 0.0){
-//         double p = 1.0/double(n); 
-//         for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], p};
-//     }
-//     else {
-//         for (size_t i = 0; i < n; ++i) output[i] = {ikey.node.edges[i], strategy_sum[offset + i] / sum};
-//     }
-
-//     return output;
-// }

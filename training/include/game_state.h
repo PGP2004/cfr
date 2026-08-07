@@ -37,7 +37,7 @@ public:
     GameState apply_chance(std::mt19937& rng);
 
     double get_reward(int player) const;
-    
+
     bool is_legal_action(const Action& action) const;
 
     //this is jank, should fix!
@@ -61,7 +61,8 @@ public:
         return (last_action == fold_action);
     }
 
-    inline double get_win_payoff(int player) const {
+    //payoff for the player if the game ended right now
+    inline double get_payoff(int player) const {
         double output = (stacks[player] - starting_stack) + static_cast<double>(pot);
         return output;
     };

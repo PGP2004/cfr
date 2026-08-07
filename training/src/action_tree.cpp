@@ -18,38 +18,25 @@ std::vector<Action> ActionTree::discretize_actions(const GameState& state){
 }
 
 std::vector<Action> ActionTree::get_legal_actions(const GameState& state){
-
-    std::vector<Action> candidates = discretize_actions(state);
     std::vector<Action> legal_actions;
 
-    for (const Action& cand : candidates) {
-        if (state.is_legal_action(cand)) {
-            legal_actions.push_back(cand);
-        }
+    for (const Action& cand : discretize_actions(state)) {
+        if (state.is_legal_action(cand)) legal_actions.push_back(cand);
     }
 
     return legal_actions;
 }
 
 PublicState ActionTree::get_public_state(const GameState& state){
+
     PublicState pub_state{
         .street_idx = state.get_street(),
         .active_player = state.get_active_player(),
-        .payoffs = {state.get_win_payoff(0),state.get_win_payoff(1)},
+        .payoffs = {state.get_payoff(0), state.get_payoff(1)},
         .folded = state.player_folded()
     };
+
     return pub_state;
-}
-
-void ActionTree::undo_action(){
-    cur_idx = nodes[cur_idx].parent_idx;
-}
-
-void ActionTree::apply_action(size_t action_idx){
-    if (action_idx >= nodes[cur_idx].child_idxs.size()){
-        throw std::out_of_range("the idx is out of range");
-    }
-    cur_idx = nodes[cur_idx].child_idxs[action_idx];
 }
 
 ActionTree::ActionTree(const GameState& root_state) {
@@ -77,9 +64,10 @@ ActionTree::ActionTree(const GameState& root_state) {
         }
 
         for (const Action& action : get_legal_actions(state)) {
-            GameState child = state.apply_action(action);
 
+            GameState child = state.apply_action(action);
             size_t child_idx = nodes.size();
+
             nodes[node_idx].child_idxs.push_back(child_idx);
             pub_states[node_idx].edge_labels.push_back(action);
 

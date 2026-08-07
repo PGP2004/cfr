@@ -3,7 +3,7 @@
 #include <stack>
 #include <stdexcept>
 
-//TODO: Go through and re-understand this
+
 class VectorPool {
 private:
     static std::stack<std::vector<double>*> delta_pool;

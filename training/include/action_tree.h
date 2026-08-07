@@ -5,8 +5,6 @@
 #include <cstddef>
 #include <array>
 
-//TODO: Add something that 
-
 struct PublicState{
     int street_idx;
     int active_player;
@@ -25,46 +23,41 @@ class ActionTree{
 
 private:
     std::vector<Action> discretize_actions(const GameState& state);
+
     std::vector<Action> get_legal_actions(const GameState& state);
+
     PublicState get_public_state(const GameState& state);
     
 public:
-    std::vector<TreeNode> nodes;
-    std::vector<PublicState> pub_states;
 
     size_t root_idx;
     size_t cur_idx;
+    std::vector<TreeNode> nodes;
+    std::vector<PublicState> pub_states;
 
     ActionTree(const GameState& root_state);
-    void undo_action();
-    void apply_action(size_t action_idx);
 
-    int active_player() const{
-        return pub_states[cur_idx].active_player;
-    };
-
-    int street() const {
-        return pub_states[cur_idx].street_idx;
-    };
-
-    bool is_terminal() 
-        const {return nodes[cur_idx].child_idxs.size() == 0;
+    void apply_action(size_t action_idx){
+        if (action_idx >= nodes[cur_idx].child_idxs.size()){
+            throw std::out_of_range("the idx is out of range");
+        }
+        cur_idx = nodes[cur_idx].child_idxs[action_idx];
     }
 
-    bool folded() const{
-        return pub_states[cur_idx].folded;
-    }
+    void undo_action(){cur_idx = nodes[cur_idx].parent_idx;}
 
-    bool is_root_node() const{
-        return root_idx == cur_idx;
-    }
+    int active_player() const {return pub_states[cur_idx].active_player;};
 
-    double get_payoff(int player) const{
-        return pub_states[cur_idx].payoffs[player];
-    }
+    int street() const { return pub_states[cur_idx].street_idx;};
 
-    void restart() {
-        cur_idx = root_idx;
-    }
+    bool is_terminal() const {return nodes[cur_idx].child_idxs.size() == 0;}
+
+    bool folded() const{return pub_states[cur_idx].folded;}
+
+    bool is_root_node() const{return root_idx == cur_idx;}
+
+    double get_payoff(int player) const{ return pub_states[cur_idx].payoffs[player];}
+
+    void restart() {cur_idx = root_idx;}
 
 };

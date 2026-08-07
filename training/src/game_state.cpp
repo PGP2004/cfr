@@ -69,8 +69,6 @@ GameState::GameState(){
 
     hands[0].fill(-1);
     hands[1].fill(-1);
-    equities.fill(-1.0);
-
 }
 
 double GameState::get_reward(int player) const {
@@ -88,7 +86,8 @@ double GameState::get_reward(int player) const {
         return reward;
     }
 
-    reward += static_cast<double>(pot);
+    std::array<double, 2> equities = get_equities(hands);
+    reward += equities[player]*static_cast<double>(pot);
     return reward;
 }
 
@@ -155,7 +154,6 @@ GameState GameState::apply_chance(std::mt19937& rng) {
 
     if (street == 0) { 
         deal_hands(rng, next.hands);
-        next.equities = get_equities(next.hands);
         next.active_player = 1;
         next.pot = 3;
         next.stacks[0] = starting_stack - 2;
