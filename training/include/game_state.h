@@ -13,11 +13,9 @@ class GameState {
 private:
 
     static constexpr int starting_stack = 200;
-
     std::array<std::array<uint8_t, 7>, 2> hands;
     std::array<int, 2> stacks;
     std::array<int, 2> pips;
-    std::array<double, 2> equities;
 
     int pot;
     int street;

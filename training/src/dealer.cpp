@@ -19,7 +19,6 @@ static void write_hands(std::mt19937& rng, hands_t& hands) {
         return d;
     }();
 
-    static std::array<uint8_t,52> deck;
     for (int i = 0; i < 9; ++i) {
         std::uniform_int_distribution<int> dist(i, 51);
         int j = dist(rng);
@@ -39,17 +38,15 @@ static void write_hands(std::mt19937& rng, hands_t& hands) {
 
 static void write_hand_ids(hands_t& hands, hand_ids_t hand_ids){
 
-    static inline const std::array<uint8_t, 1> preflop_counts = {2};
-    static inline const std::array<uint8_t, 2> flop_counts = {2, 3};
-    static inline const std::array<uint8_t, 2> turn_counts = {2, 4};
-    static inline const std::array<uint8_t, 2> river_counts = {2, 5};
+    static const std::array<uint8_t, 1> preflop_counts = {2};
+    static const std::array<uint8_t, 2> flop_counts = {2, 3};
+    static const std::array<uint8_t, 2> turn_counts = {2, 4};
+    static const std::array<uint8_t, 2> river_counts = {2, 5};
 
-    static inline Indexer preflop_indexer{preflop_counts.size(), preflop_counts.data()};
-    static inline Indexer flop_indexer{flop_counts.size(),flop_counts.data()};
-    static inline Indexer turn_indexer{turn_counts.size(),turn_counts.data()};
-    static inline Indexer river_indexer{river_counts.size(), river_counts.data()};
-
-    static std::array<uint8_t, 52> deck;
+    static Indexer preflop_indexer{preflop_counts.size(), preflop_counts.data()};
+    static Indexer flop_indexer{flop_counts.size(),flop_counts.data()};
+    static Indexer turn_indexer{turn_counts.size(),turn_counts.data()};
+    static Indexer river_indexer{river_counts.size(), river_counts.data()};
 
     for (size_t p = 0; p < 2; ++p) {
         hand_ids[p][0] = static_cast<int>(hand_index_last(&preflop_indexer.h, hands[p].data()));
