@@ -17,7 +17,7 @@ struct CardBuckets {
     std::vector<int> flop_clusters;
     std::vector<int> turn_clusters;
     std::vector<int> river_clusters;
-    std::vector<int> cluster_counts;
+    std::vector<size_t> cluster_counts;
 
     CardBuckets() = default; 
 

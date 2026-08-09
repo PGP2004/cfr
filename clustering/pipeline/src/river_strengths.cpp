@@ -61,7 +61,14 @@ void run_river_strengths(const PipelineConfig& cfg) {
     std::ofstream out(cfg.art.river_strengths, std::ios::binary);
     if (!out) throw std::runtime_error("cant open the write path: " + cfg.art.river_strengths.string());
 
-    MatrixHeader header{static_cast<uint64_t>(total), 1, sizeof(int)};
+    MatrixHeader header{
+        .num_rows = static_cast<uint64_t>(total),
+        .num_cols = 1,
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false
+    };
+    
     out.write(reinterpret_cast<const char*>(&header), sizeof(header));
 
     std::array<uint8_t, 7> cards;

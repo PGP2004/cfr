@@ -56,7 +56,14 @@ void run_flop_multisets(const PipelineConfig& cfg) {
     std::ofstream out(cfg.art.flop_multisets, std::ios::binary);
     if (!out) throw std::runtime_error("cant open the path: " + cfg.art.flop_multisets.string());
 
-    MatrixHeader flop_header{total_flops, multiset_size, sizeof(int)};
+    MatrixHeader flop_header{
+        .num_rows = total_flops,
+        .num_cols = multiset_size, 
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false
+    };
+
     out.write(reinterpret_cast<const char*>(&flop_header), sizeof(flop_header));
 
     std::array<bool, 52> missing;

@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <vector>
+#include <iostream>
 #include "action_tree.h"
 #include "game_state.h"
 
@@ -78,4 +79,5 @@ ActionTree::ActionTree(const GameState& root_state) {
             stack.push_back({std::move(child), child_idx});
         }
     }
+
 }

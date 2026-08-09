@@ -44,10 +44,10 @@ int run_pipeline(char** argv) {
     steady::time_point start_time;
     steady::time_point finish_time;
 
-    // start_time = steady::now();
-    // run_river_strengths(cfg);
-    // finish_time = steady::now();
-    // print_runtime(start_time, finish_time);
+    start_time = steady::now();
+    run_river_strengths(cfg);
+    finish_time = steady::now();
+    print_runtime(start_time, finish_time);
 
     start_time = steady::now();
     run_turn_cdfs(cfg);
@@ -74,15 +74,15 @@ int run_pipeline(char** argv) {
     print_runtime(start_time, finish_time);
 
     start_time = steady::now();
-    run_flop_clusters(cfg); 
-    finish_time = steady::now();
-    std::cout << "finished flop_clusters" << std::endl;
-    print_runtime(start_time, finish_time);
-
-    start_time = steady::now();
     run_flop_ev_sdev(cfg);
     finish_time = steady::now();
     std::cout << "finished flop_ev_sdev" << std::endl;
+    print_runtime(start_time, finish_time);
+
+    start_time = steady::now();
+    run_flop_clusters(cfg); 
+    finish_time = steady::now();
+    std::cout << "finished flop_clusters" << std::endl;
     print_runtime(start_time, finish_time);
 
     return 0;

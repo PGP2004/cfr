@@ -12,7 +12,6 @@
 #include <random>
 #include <utility>  
 
-
 static void deal_hands(std::mt19937& rng, std::array<std::array<uint8_t, 7>, 2>& hands) {
     //deck object created just once
     static std::array<int, 52> deck = []{

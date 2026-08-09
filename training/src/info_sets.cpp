@@ -1,5 +1,7 @@
 #include "info_sets.h"
 #include "action_tree.h"
+#include "matrix_loader.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
@@ -23,6 +25,63 @@ InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t>& clu
     strategy_sum.assign(cum_total, 0.0);
 }
 
+
+InfoSets::InfoSets(const CheckPoint& ck_pt) {
+
+    //todo:add check
+
+    auto [temp_vec, last_t_header] = load_matrix_and_header<int>(ck_pt.last_t_path);
+
+    if (!(temp_vec.size() == 1)){throw std::runtime_error("The last_t vector should have size 1");}
+    last_t = temp_vec[0];
+
+    auto [regret_sum, regret_header] = load_matrix_and_header<float>(ck_pt.regret_path);
+
+    auto [strategy_sum, strategy_header] = load_matrix_and_header<float>(ck_pt.strategy_path);
+
+    auto [offsets, offset_header] = load_matrix_and_header<size_t>(ck_pt.offset_path);
+}
+
+void InfoSets::write_check_point(const CheckPoint& ck_pt){
+
+    MatrixHeader regret_header{
+        .num_rows = regret_sum.size(),
+        .num_cols = 1,
+        .bytes_per_elt = sizeof(float),
+        .is_signed = true,
+        .is_float = true
+    };
+    write_matrix_and_header(ck_pt.regret_path, regret_header, regret_sum);
+
+    MatrixHeader strategy_header{
+        .num_rows = strategy_sum.size(),
+        .num_cols = 1,
+        .bytes_per_elt = sizeof(float),
+        .is_signed = true,
+        .is_float = true
+    };
+    write_matrix_and_header(ck_pt.strategy_path, strategy_header, strategy_sum);
+
+    MatrixHeader offset_header{
+        .num_rows = offsets.size(),
+        .num_cols = 1,
+        .bytes_per_elt = sizeof(size_t),
+        .is_signed = false,
+        .is_float = false
+    };
+    write_matrix_and_header(ck_pt.offset_path, offset_header, offsets);
+
+    MatrixHeader last_t_header{
+        .num_rows = 1,
+        .num_cols = 1,
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false
+    };
+    std::vector<int> temp_vec = {last_t};
+    write_matrix_and_header(ck_pt.last_t_path, last_t_header, temp_vec);
+}
+
 void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas) {
 
     size_t offset = get_offset(ikey);
@@ -40,11 +99,10 @@ void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& act
 void InfoSets::update_strategy(const InfoKey& ikey , std::vector<double>& cur_strat) {
 
     size_t offset = get_offset(ikey);
-    size_t n = ikey.num_actions;
 
-    if (n != cur_strat.size()) throw std::logic_error("size mismatch");
+    if (ikey.num_actions != cur_strat.size()) throw std::logic_error("size mismatch");
 
-    for (size_t i = 0; i < n; i++) {
+    for (size_t i = 0; i < ikey.num_actions; i++) {
         strategy_sum[offset+i] += cur_strat[i];
     }
 }

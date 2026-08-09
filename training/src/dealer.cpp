@@ -97,7 +97,7 @@ double Dealer::get_reward(int player, const ActionTree& at){
         return -at.get_payoff(opp);
     }
 
-    // if no one folded in the game. Look at the equities
+    // if no one folded in the game.
     if (winner == -1) return 0.0;
     else if (winner == player) return at.get_payoff(player);
     else if (winner == opp) return - at.get_payoff(opp);

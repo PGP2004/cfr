@@ -43,6 +43,13 @@ void run_turn_distance_matrix(const PipelineConfig& cfg) {
     size_t num_buckets = static_cast<size_t>(center_header.num_cols);
 
     std::vector<int> distance_matrix = get_dist_matrix(centers, num_buckets, num_centers);
-    MatrixHeader dist_matrix_header{num_centers, num_centers, sizeof(int)};
+    MatrixHeader dist_matrix_header{
+        .num_rows = num_centers, 
+        .num_cols = num_centers, 
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false
+    };
+    
     write_matrix_and_header<int>(cfg.art.turn_distance_matrix.string(), dist_matrix_header, distance_matrix);
 }

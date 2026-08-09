@@ -86,6 +86,12 @@ void run_flop_ev_sdev(const PipelineConfig& cfg) {
         output[o_idx + 1] = sdev;
     }
 
-    MatrixHeader output_header{num_flops, 2, sizeof(int)};
+    MatrixHeader output_header{
+        .num_rows = num_flops,
+        .num_cols =  2, 
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false};
+        
     write_matrix_and_header<int>(cfg.art.flop_ev_sdev.string(), output_header, output);
 }

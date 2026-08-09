@@ -19,6 +19,14 @@ CFR::CFR(CardBuckets& buckets, ActionTree& action_tree):
     iters_per_discount = 1000;
 }
 
+CFR::CFR(const CheckPoint& ck_pt, CardBuckets& buckets, ActionTree& action_tree): 
+    card_buckets(buckets), 
+    action_tree(action_tree),
+    infosets(ck_pt){
+    VectorPool::preallocate(4, 200);
+    iters_per_discount = 1000;
+}
+
 
 InfoKey CFR::get_InfoKey(const ActionTree& at, const Dealer& d) {
     const TreeNode& n = at.nodes[at.cur_idx];
@@ -33,7 +41,6 @@ double CFR::traverse_helper(int player) {
         return dealer.get_reward(player, action_tree);
     }
 
-    // Player Action Branch
     int active_player = action_tree.active_player();
 
     if (active_player != player) {
@@ -51,6 +58,7 @@ double CFR::traverse_helper(int player) {
 
         return util;
     }
+
     // Branch where active player = current player
     InfoKey ikey = get_InfoKey(action_tree, dealer);
     VectorPool::ProbsBuffer probs_buf;
@@ -90,7 +98,9 @@ void CFR::traverse(int player){
 void CFR::train(int num_iterations, int starting_iter) {
 
     for (int i = starting_iter; i < starting_iter + num_iterations; ++i) {
-        traverse(0); traverse(1);
+        traverse(0); 
+        traverse(1);
         if (i % iters_per_discount == 0 && i != 0) infosets.discount(i);
     }
 }
+

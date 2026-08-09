@@ -37,12 +37,30 @@ void run_flop_clusters(const PipelineConfig& cfg) {
         }
     }
 
-    MatrixHeader wts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(float)};
+    MatrixHeader wts_header{
+        .num_rows = cfg.flop_clusters, 
+        .num_cols = cfg.flop_center_support, 
+        .bytes_per_elt = sizeof(float),
+        .is_signed = true,
+        .is_float = true};
+
     write_matrix_and_header<float>(cfg.art.flop_ctrs_wts.string(), wts_header, wts);
 
-    MatrixHeader verts_header{cfg.flop_clusters, cfg.flop_center_support, sizeof(int)};
+    MatrixHeader verts_header{
+        .num_rows = cfg.flop_clusters, 
+        .num_cols = cfg.flop_center_support,
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false
+        };
     write_matrix_and_header<int>(cfg.art.flop_ctrs_verts.string(), verts_header, verts);
 
-    MatrixHeader assignment_header{assignments.size(), 1, sizeof(int)};
+    MatrixHeader assignment_header{
+        .num_rows = assignments.size(), 
+        .num_cols = 1,
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false};
+
     write_matrix_and_header<int>(cfg.art.flop_assignments.string(), assignment_header, assignments);
 }

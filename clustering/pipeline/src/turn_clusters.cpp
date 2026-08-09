@@ -30,9 +30,23 @@ void run_turn_clusters(const PipelineConfig& cfg) {
     auto [assignments, centers] = L1::l1_k_means(params, cdfs);
     std::cout << "Finished L1 k means" << std::endl;
 
-    MatrixHeader center_header{cfg.turn_clusters, cdf_header.num_cols, sizeof(int)};
+    MatrixHeader center_header{
+        .num_rows = cfg.turn_clusters, 
+        .num_cols = cdf_header.num_cols,
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false
+    };
+
     write_matrix_and_header<int>(cfg.art.turn_cdf_centers.string(), center_header, centers);
 
-    MatrixHeader assignment_header{assignments.size(), 1, sizeof(int)};
+    MatrixHeader assignment_header{
+        .num_rows = assignments.size(),
+        .num_cols = 1, 
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false,
+    };
+
     write_matrix_and_header<int>(cfg.art.turn_assignments.string(), assignment_header, assignments);
 }

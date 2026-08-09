@@ -1,20 +1,11 @@
-TODO: Switch to discounted CFR over linear CFR for numerical stability - Done 
+TODO: Improve the matrix header to store if its signed and if its boolean <- Done!
+- Use this to make a checkpoint to save and get back the infoset state
+- Write a function to extract the preflop range
+- Do some data analysis to see if it looks right
+- Clean up the pipeline script to use callable types (first I must learn about these at
+https://csiflabs.cs.ucdavis.edu/~tyfeng/ecs34/C++/callable.html
+)
 
-TODO: Clean up the code. this has multiple parts the first discounted
-    - 1: Set up the utils. i think i acidentally delted. look at the github
-    -2: Add d
-
-
-
-TODO: Launch a longer training run
-TODO: Revamp
-
-
-
-
-TODO: 
-
- TO
-
-
+- Set off a longer training run 
+TODO: Launch a longer training run and see if the CFR works
 

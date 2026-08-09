@@ -11,7 +11,7 @@ class Dealer{
 private:
     std::array<std::array<uint8_t, 7>, 2> hands;
     std::array<std::array<int, 4>, 2> hand_ids;
-    int winner;
+    int winner; // 0 or 1 means player 0/1 is the winner. -1 is tie
 
 public:
 

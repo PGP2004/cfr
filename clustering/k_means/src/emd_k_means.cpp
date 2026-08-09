@@ -302,7 +302,7 @@ namespace emd{
 
         ClusterBuffer c_buff;
         c_buff.assignments.assign(params.num_multisets, 0);
-        c_buff.prev_assignments.assign(params.num_multisets, 0);
+        c_buff.prev_assignments.assign(params.num_multisets, -1);
         c_buff.min_dists.assign(params.num_multisets, 0.0);
         c_buff.grouped.assign(params.num_multisets*params.multiset_size, 0);
         c_buff.counts.assign(params.num_clusters, 0);

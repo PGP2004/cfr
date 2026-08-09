@@ -8,6 +8,13 @@
 #include <utility>
 #include <random>
 
+struct CheckPoint{
+    std::string regret_path;
+    std::string strategy_path;
+    std::string offset_path;
+    std::string last_t_path;
+};
+
 struct InfoKey {
     size_t node_idx;
     size_t cluster_idx;
@@ -27,9 +34,14 @@ private:
         return offsets[ikey.node_idx] + ikey.cluster_idx*ikey.num_actions;
     }
 
+
 public:
 
-    explicit InfoSets(const ActionTree& action_tree, const std::vector<int>& cluster_counts);
+    explicit InfoSets(const ActionTree& action_tree, const std::vector<size_t>& cluster_counts);
+
+    explicit InfoSets(const CheckPoint& ck_pt);
+
+    void write_check_point(const CheckPoint& ck_pt);
 
     void update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas);
 

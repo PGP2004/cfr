@@ -52,8 +52,6 @@ void get_strength_cdf(const std::array<uint8_t, 6>& cards, uint8_t num_buckets,
 }
 
 void run_turn_cdfs(const PipelineConfig& cfg) {
-    if (fs::exists(cfg.art.turn_cdfs))
-        throw std::runtime_error("write path already exists: " + cfg.art.turn_cdfs.string());
 
     auto [strengths, river_header] = load_matrix_and_header<int>(cfg.art.river_strengths.string());
 
@@ -70,7 +68,14 @@ void run_turn_cdfs(const PipelineConfig& cfg) {
     std::ofstream out(cfg.art.turn_cdfs, std::ios::binary);
     if (!out) throw std::runtime_error("cant open the path: " + cfg.art.turn_cdfs.string());
 
-    MatrixHeader turn_cdf_header{static_cast<uint64_t>(total_turns), cfg.turn_buckets, sizeof(int)};
+    MatrixHeader turn_cdf_header{
+        .num_rows = static_cast<uint64_t>(total_turns), 
+        .num_cols = cfg.turn_buckets,
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false
+    };
+
     out.write(reinterpret_cast<const char*>(&turn_cdf_header), sizeof(turn_cdf_header));
 
     std::array<bool, 52> missing;
