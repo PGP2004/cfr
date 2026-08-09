@@ -47,19 +47,27 @@ int run_training(char** argv){
     8'000'000 , 16'000'000, 32'000'000, 64'000'000, 128'000'000,
     256'000'000, 512'000'000, 1024'000'000};
     int cur_iter = 0;
-    std::unordered_map<std::string, double> preflop_range;
+    std::unordered_map<std::string, double> potbets;
+    std::unordered_map<std::string, double> limps;
     Action pot_bet = {3,6};
+    Action limp = {2,0};
 
-    std::string preflop_path = (root / "training" / "preflops" /  "potbet_prob_").string();
+    std::string potbet_path = (root / "training" / "preflops" /  "potbet_prob_").string();
+    std::string limp_path = (root / "training" / "preflops" /  "limp_prob_").string();
 
     for (size_t i = 0; i < ckpt_iters.size(); ++i){
 
         int train_iters = ckpt_iters[i] - cur_iter;       
         cfr.train(train_iters, cur_iter);
         cur_iter = ckpt_iters[i];
-        preflop_range = cfr.preflop_probs(pot_bet);
-        std::string csv_title = preflop_path + std::to_string(cur_iter) + ".csv";
-        write_preflop_csv(csv_title, preflop_range);
+
+        std::string potbet_title = potbet_path + std::to_string(cur_iter) + ".csv";
+        potbets = cfr.preflop_probs(pot_bet);
+        write_preflop_csv(potbet_title, potbets);
+
+        std::string limp_title = limp_path + std::to_string(cur_iter) + ".csv";
+        limps = cfr.preflop_probs(limp);
+        write_preflop_csv(limp_title, limps);
     }
        
     return 0;

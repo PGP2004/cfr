@@ -2,8 +2,11 @@ TODO: Improve the matrix header to store if its signed and if its boolean <- Don
 - Use this to make a checkpoint to save and get back the infoset state <- Done!
 - Add a river clustering stage <- Done! 
 
+TODO: Go thru fable review and address the issues it brough up
+Clean up the training main whihc is a complete mess right now
 
-- Write a function to extract the preflop range <- Work on this!
+Chatslopped and need to unslop:
+- Write a function to extract the preflop range 
 - Do some data analysis to see if it looks right
 
 Pipeline/Runs Infra:
