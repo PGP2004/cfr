@@ -12,9 +12,9 @@ void run_stage(StageFunc stage_func, PipelineConfig& cfg, std::string stage_name
     stage_func(cfg);
     steady::time_point finish_time = steady::now();
     std::cout << stage_name <<
-        "Took " <<
+        " Took " <<
         std::chrono::duration<double>(finish_time - start_time).count() <<
-        "seconds" <<
+        " seconds" <<
         std::endl;
     std::cout << "-------------------------------------------------" << std::endl;
 }

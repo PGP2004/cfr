@@ -1,27 +1,62 @@
 #include <cstdint>
 #include <vector>
 #include <iostream>
+#include <unordered_set>
 #include "action_tree.h"
 #include "game_state.h"
 
-std::vector<Action> ActionTree::discretize_actions(const GameState& state){
-    int pot = state.get_pot();
-    int my_pip = state.get_pip(state.get_active_player());
+int ActionTree::raise_to_x_pot(double x, int me, int pot,
+    std::array<int,2> pips, std::array<int,2> stacks) const {
 
-    std::vector<std::pair<std::string, Action>> candidates = {
-        {"fold", {0, 0}}, {"check", {1, 0}},
-        {"call", {2, 0}}, {"pot", {3, my_pip + pot}}
+    int opp = 1 - me;
+    int my_pip = pips[me]; 
+    int opp_pip = pips[opp];
+
+    int to_call = opp_pip - my_pip;
+    int pot_after = pot + to_call;
+
+    int cur_bet = std::max(my_pip, opp_pip);
+    int raise_to  = cur_bet + static_cast<int>(std::llround(x * pot_after));
+
+    int min_raise_to = cur_bet + std::max(2, to_call);
+    int max_raise_to = std::min(pips[0] + stacks[0], pips[1] + stacks[1]);
+
+    if (raise_to < min_raise_to) raise_to = min_raise_to;
+    if (raise_to >= max_raise_to) raise_to = max_raise_to;
+    return raise_to;
+}
+
+std::vector<Action> ActionTree::get_actions(const GameState& state){
+    int pot = state.get_pot();
+    int player = state.get_active_player();
+    const std::array<int, 2> pips = state.get_pips();
+    const std::array<int, 2> stacks = state.get_stacks();
+
+    std::vector<Action> output = {
+        {0, 0}, //fold
+        {1, 0}, //check
+        {2, 0}, //call
     };
 
-    std::vector<Action> output;
-    for (const auto& cand : candidates) output.push_back(cand.second);
+    std::unordered_set<int> seen;
+
+    for (float x : bet_sizes){
+
+        int chip_amt = raise_to_x_pot(x, player, pot, pips, stacks);
+
+        if (seen.insert(chip_amt).second) {
+            //prevent multiple min/max raises getting passed along
+            output.push_back({3, chip_amt});
+        }
+    }
+
     return output;
 }
 
 std::vector<Action> ActionTree::get_legal_actions(const GameState& state){
     std::vector<Action> legal_actions;
 
-    for (const Action& cand : discretize_actions(state)) {
+    for (const Action& cand : get_actions(state)) {
         if (state.is_legal_action(cand)) legal_actions.push_back(cand);
     }
 
@@ -41,7 +76,9 @@ PublicState ActionTree::get_public_state(const GameState& state){
     return pub_state;
 }
 
-ActionTree::ActionTree(const GameState& root_state) {
+ActionTree::ActionTree(const GameState& root_state, std::vector<float> bet_sizes):
+    bet_sizes(bet_sizes){
+
     std::mt19937 rng(0);
     root_idx = 0;
     cur_idx  = 0;

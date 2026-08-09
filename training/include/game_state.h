@@ -47,10 +47,9 @@ public:
     
     inline int get_pot() const { return pot; }
 
-    inline int get_pip(int player) const {
-        if (player != 0 && player != 1) throw std::logic_error("The player index must be one of 1 or 0");
-        return pips[player];
-    }
+    inline const std::array<int,2> get_pips() const {return pips;}
+
+    inline const std::array<int,2> get_stacks() const {return stacks;}
 
     inline bool player_folded() const {
         Action fold_action = {0,0};

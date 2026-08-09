@@ -12,6 +12,8 @@
 namespace fs = std::filesystem;
 using steady = std::chrono::steady_clock;
 
+
+
 int run_training(char** argv){
     fs::path exe  = fs::weakly_canonical(fs::path(argv[0]));
     fs::path root = exe.parent_path().parent_path().parent_path().parent_path();
@@ -21,7 +23,9 @@ int run_training(char** argv){
         (storage / "river_strengths").string());
 
     GameState init_state;
-    ActionTree at(init_state);
+
+    std::vector<float> bet_sizes = {0.5, 1.0, 3.0};
+    ActionTree at(init_state, bet_sizes);
     CFR cfr(abs, at);
     int iters = 500000;
     cfr.train(iters, 0);

@@ -22,8 +22,11 @@ struct TreeNode{
 class ActionTree{
 
 private:
-    std::vector<Action> discretize_actions(const GameState& state);
 
+    int raise_to_x_pot(double x, int player, int pot,
+        std::array<int,2> pips, std::array<int,2> stacks) const;
+
+    std::vector<Action> get_actions(const GameState& state);
     std::vector<Action> get_legal_actions(const GameState& state);
 
     PublicState get_public_state(const GameState& state);
@@ -35,7 +38,10 @@ public:
     std::vector<TreeNode> nodes;
     std::vector<PublicState> pub_states;
 
-    ActionTree(const GameState& root_state);
+    // bet sizes encoded as floats where (0.333 = 1/3 pot bet)
+    std::vector<float> bet_sizes; 
+
+    ActionTree(const GameState& root_state, std::vector<float> bet_sizes);
 
     void apply_action(size_t action_idx){
         if (action_idx >= nodes[cur_idx].child_idxs.size()){
