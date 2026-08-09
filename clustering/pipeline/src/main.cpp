@@ -1,7 +1,9 @@
-#include "pipeline.h"
 #include <filesystem>
 #include <iostream>
 #include <chrono>
+
+#include "pipeline.h"
+#include "matrix_loader.h"
 
 namespace fs = std::filesystem;
 using steady = std::chrono::steady_clock;
@@ -12,7 +14,7 @@ void run_stage(StageFunc stage_func, PipelineConfig& cfg, std::string stage_name
     stage_func(cfg);
     steady::time_point finish_time = steady::now();
     std::cout << stage_name <<
-        " Took " <<
+        " took " <<
         std::chrono::duration<double>(finish_time - start_time).count() <<
         " seconds" <<
         std::endl;
@@ -25,6 +27,8 @@ int run_pipeline(char** argv) {
 
     Artifacts artifacts{
         .river_strengths = storage/"river_strengths",
+        .river_centers = storage/"river_centers",
+        .river_assignments = storage/"river_assignments",
 
         .turn_cdfs = storage/"turn_cdfs",
         .turn_cdf_centers = storage/"turn_cdf_centers",
@@ -41,9 +45,12 @@ int run_pipeline(char** argv) {
     PipelineConfig cfg{
         .art = artifacts,
 
+        .river_clusters = 50,
+        .river_max_iters = 100,
+
         .turn_buckets = 20,
         .turn_clusters = 50,
-        .turn_max_iters = 1000,
+        .turn_max_iters = 100,
 
         .flop_clusters = 50,
         .flop_max_iters = 40,
@@ -51,7 +58,8 @@ int run_pipeline(char** argv) {
         .seed = 42
     };
 
-    run_stage(run_river_strengths, cfg, "Generating River Strengths");
+    // run_stage(run_river_strengths, cfg, "Generating River Strengths");
+    // run_stage(run_river_clusters, cfg, "Generating River Strengths");
     run_stage(run_turn_cdfs, cfg, "Generating Turn CDFs");
     run_stage(run_turn_clusters, cfg, "Clustering Turn");
     run_stage(run_turn_distance_matrix, cfg, "Generating Turn Distance Matirx");

@@ -76,8 +76,9 @@ std::pair<std::vector<T>, MatrixHeader> load_matrix_and_header(const std::string
     if (!in) throw std::runtime_error("cannot open " + result_path);
 
     MatrixHeader header;
-    header_type_check<T>(header);
     in.read(reinterpret_cast<char*>(&header), sizeof(header));
+    header_type_check<T>(header);
+    
     if (in.gcount() != static_cast<std::streamsize>(sizeof(header))) throw std::runtime_error("missing header");
 
 
@@ -112,6 +113,7 @@ std::pair<std::vector<T>, MatrixHeader> load_matrix_and_header(const std::string
 
 template <typename T>
 inline void write_matrix_and_header(const std::string& write_path, MatrixHeader header, const std::vector<T>& results) {
+
     //check against the header and throw an error if something goes wrong
     header_type_check<T>(header);
 

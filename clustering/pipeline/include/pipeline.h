@@ -5,6 +5,9 @@
 // stages.h
 struct Artifacts {
     std::filesystem::path river_strengths;
+    std::filesystem::path river_centers;
+    std::filesystem::path river_assignments;
+
     std::filesystem::path turn_cdfs;
     std::filesystem::path turn_cdf_centers;
     std::filesystem::path turn_assignments;
@@ -19,6 +22,9 @@ struct Artifacts {
 struct PipelineConfig {
     Artifacts art;
 
+    size_t river_clusters;
+    size_t river_max_iters;
+
     size_t turn_buckets;
     size_t turn_clusters;
     size_t turn_max_iters;
@@ -31,9 +37,12 @@ struct PipelineConfig {
 };
 
 void run_river_strengths(const PipelineConfig& cfg);
+void run_river_clusters(const PipelineConfig& cfg);
+
 void run_turn_cdfs(const PipelineConfig& cfg);
 void run_turn_clusters(const PipelineConfig& cfg);
 void run_turn_distance_matrix(const PipelineConfig& cfg);
+
 void run_flop_multisets(const PipelineConfig& cfg);
 void run_flop_clusters(const PipelineConfig& cfg);
 void run_flop_ev_sdev(const PipelineConfig& cfg);

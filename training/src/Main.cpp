@@ -12,7 +12,20 @@
 namespace fs = std::filesystem;
 using steady = std::chrono::steady_clock;
 
+//Training run ideation
+//has like a set of iters to write checkpoints in
+// has like paths to load the clusterings from
+// has like a max number of iters
+// has a way to extract the preflop range
+//
 
+struct Trainer{
+
+    std::string flop_path;
+    std::string turn_path;
+    std::string river_path;
+    
+}
 
 int run_training(char** argv){
     fs::path exe  = fs::weakly_canonical(fs::path(argv[0]));

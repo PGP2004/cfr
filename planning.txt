@@ -3,11 +3,9 @@ TODO: Improve the matrix header to store if its signed and if its boolean <- Don
 - Write a function to extract the preflop range <- Work on this!
 - Do some data analysis to see if it looks right
 
-
 Pipeline/Runs Infra:
 - Clean up the pipeline script to use callable types (first I must learn about these at
-https://csiflabs.cs.ucdavis.edu/~tyfeng/ecs34/C++/callable.html
-)
+https://csiflabs.cs.ucdavis.edu/~tyfeng/ecs34/C++/callable.html)
 
 - Set up a script to save at certain checkpoint to certain paths etc
 - Ideally like 

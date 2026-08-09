@@ -10,7 +10,6 @@
 #include <array>
 #include <iostream>
 
-
 CFR::CFR(CardBuckets& buckets, ActionTree& action_tree): 
     card_buckets(buckets), 
     action_tree(action_tree),
@@ -26,7 +25,6 @@ CFR::CFR(const CheckPoint& ck_pt, CardBuckets& buckets, ActionTree& action_tree)
     VectorPool::preallocate(4, 200);
     iters_per_discount = 1000;
 }
-
 
 InfoKey CFR::get_InfoKey(const ActionTree& at, const Dealer& d) {
     const TreeNode& n = at.nodes[at.cur_idx];

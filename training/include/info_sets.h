@@ -34,7 +34,6 @@ private:
         return offsets[ikey.node_idx] + ikey.cluster_idx*ikey.num_actions;
     }
 
-
 public:
 
     explicit InfoSets(const ActionTree& action_tree, const std::vector<size_t>& cluster_counts);
