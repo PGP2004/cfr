@@ -4,6 +4,7 @@
 #include "cfr.h"    
 #include "vector_pool.h"
 
+#include <unordered_map>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -102,19 +103,48 @@ void CFR::train(int num_iterations, int starting_iter) {
     }
 }
 
-double CFR::get_prob(const ActionTree& at, const Dealer& d, const Action& a){
-    InfoKey ikey = get_InfoKey(at, d);
-    std::vector<double> prob_vec;
-    infosets.get_strategy(ikey, prob_vec);
 
-    std::vector<Action> actions = at.pub_states[at.cur_idx].edge_labels;
+double CFR::get_prob(InfoKey ikey, Action a){
 
-    for (size_t i = 0 ; i < prob_vec.size(); ++i){
-        if (a == actions[i]){
-            return prob_vec[i];
+    std::vector<double> strat_vec;
+    infosets.get_strategy(ikey, strat_vec);
+    std::vector<Action> actions = action_tree.pub_states[ikey.node_idx].edge_labels;
+    
+    for (size_t i = 0; i < actions.size(); ++i){
+        if (actions[i] == a){
+            return strat_vec[i];
         }
     }
 
     return -1.0;
 }
 
+//chatbot function <- Clean at some point!
+std::unordered_map<std::string, double> CFR::preflop_probs(Action target_action) {
+    static const std::array<uint8_t, 1> cpr = {2};
+    static Indexer idx{1, cpr.data()};
+    static const std::array<std::string, 13> rank = {
+        "2","3","4","5","6","7","8","9","T","J","Q","K","A"};
+
+    size_t root_idx = action_tree.root_idx;
+    size_t num_actions = action_tree.pub_states[root_idx].edge_labels.size();
+
+    auto prob = [&](uint8_t c0, uint8_t c1) {
+        uint8_t cards[2] = {c0, c1};
+        InfoKey ikey{root_idx, hand_index_last(&idx.h, cards), num_actions};
+        return get_prob(ikey, target_action);
+    };
+
+    std::unordered_map<std::string, double> output;
+    for (uint8_t hi = 0; hi < 13; ++hi) {
+        for (uint8_t lo = 0; lo <= hi; ++lo) {
+            if (hi == lo) { 
+                output[rank[hi] + rank[hi]] = prob(make_card(hi, 0), make_card(hi, 1));
+            } else {
+                output[rank[hi] + rank[lo] + "o"] = prob(make_card(hi, 0), make_card(lo, 1));
+                output[rank[hi] + rank[lo] + "s"] = prob(make_card(hi, 0), make_card(lo, 0));
+            }
+        }
+    }
+    return output;
+}

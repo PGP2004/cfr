@@ -19,21 +19,16 @@ using steady = std::chrono::steady_clock;
 // has a way to extract the preflop range
 //
 
-// struct Trainer{
+void write_preflop_csv(const std::string& path,
+        const std::unordered_map<std::string, double>& preflop) {
 
-//     std::string flop_path;
-//     std::string turn_path;
-//     std::string river_path;
-    
-// };
+    std::ofstream out(path);
+    if (!out) throw std::runtime_error("cannot open " + path);
 
-double raise_prob(CFR cfr, std::array<std::string, 2> hand){
-
-    
-    
+    out << "hand,prob\n";
+    for (const auto& [key, val] : preflop)
+        out << key << ',' << val << '\n';
 }
-
-
 
 int run_training(char** argv){
     fs::path exe  = fs::weakly_canonical(fs::path(argv[0]));
@@ -47,25 +42,26 @@ int run_training(char** argv){
     std::vector<float> bet_sizes = {1.0};
     ActionTree at(init_state, bet_sizes);
     CFR cfr(buckets, at);
-    int iters = 500000;
 
-    steady::time_point start = steady::now();
-    cfr.train(iters, 0);
-    steady::time_point end = steady::now();
-    std::cout << "Took " << std::chrono::duration<double>(end - start).count() << "s" << std::endl;
-    std::cout << "-------------------------------------------------" << std::endl;
+    std::vector<int> ckpt_iters = { 1'000'000, 2'000'000, 4'000'000,
+    8'000'000 , 16'000'000, 32'000'000, 64'000'000, 128'000'000,
+    256'000'000, 512'000'000, 1024'000'000};
+    int cur_iter = 0;
+    std::unordered_map<std::string, double> preflop_range;
+    Action pot_bet = {3,6};
 
+    std::string preflop_path = (root / "training" / "preflops" /  "potbet_prob_").string();
 
-    std::string run_path = (root / "training/ckpts/run_0/").string() ;
-    CheckPoint ck_pt{
-        .regret_path = run_path + "regret_sum",
-        .strategy_path = run_path + "strategy_sum",
-        .offset_path = run_path + "offsets",
-        .last_t_path = run_path + "last_t"
-    };
-    cfr.write_isets_check_point(ck_pt);
+    for (size_t i = 0; i < ckpt_iters.size(); ++i){
 
-    CFR new_cfr(ck_pt, buckets, at);
+        int train_iters = ckpt_iters[i] - cur_iter;       
+        cfr.train(train_iters, cur_iter);
+        cur_iter = ckpt_iters[i];
+        preflop_range = cfr.preflop_probs(pot_bet);
+        std::string csv_title = preflop_path + std::to_string(cur_iter) + ".csv";
+        write_preflop_csv(csv_title, preflop_range);
+    }
+       
     return 0;
 }
 

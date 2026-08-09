@@ -36,5 +36,7 @@ class CFR {
         CFR(const CheckPoint& ck_pt, CardBuckets& card_buckets, ActionTree& action_tree);
         void write_isets_check_point(const CheckPoint& ck_pt){infosets.write_check_point(ck_pt);}
         void train(int num_iterations, int starting_iter);
-        double get_prob(const ActionTree& at, const Dealer& d, const Action& a);
+
+        double get_prob(InfoKey ikey, Action a);
+        std::unordered_map<std::string, double> preflop_probs(Action action);
     };
