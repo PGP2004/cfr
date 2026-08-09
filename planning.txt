@@ -1,5 +1,8 @@
 TODO: Improve the matrix header to store if its signed and if its boolean <- Done!
 - Use this to make a checkpoint to save and get back the infoset state <- Done!
+- Add a river clustering stage <- Done! 
+
+
 - Write a function to extract the preflop range <- Work on this!
 - Do some data analysis to see if it looks right
 

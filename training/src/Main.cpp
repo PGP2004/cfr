@@ -19,35 +19,44 @@ using steady = std::chrono::steady_clock;
 // has a way to extract the preflop range
 //
 
-struct Trainer{
+// struct Trainer{
 
-    std::string flop_path;
-    std::string turn_path;
-    std::string river_path;
+//     std::string flop_path;
+//     std::string turn_path;
+//     std::string river_path;
+    
+// };
+
+double raise_prob(CFR cfr, std::array<std::string, 2> hand){
+
+    
     
 }
+
+
 
 int run_training(char** argv){
     fs::path exe  = fs::weakly_canonical(fs::path(argv[0]));
     fs::path root = exe.parent_path().parent_path().parent_path().parent_path();
     fs::path storage = root / "clustering/storage";
-    CardBuckets abs((storage / "flop_assignments").string(),
+    CardBuckets buckets((storage / "flop_assignments").string(),
         (storage / "turn_assignments").string(),
-        (storage / "river_strengths").string());
+        (storage / "river_assignments").string());
 
     GameState init_state;
-
-    std::vector<float> bet_sizes = {0.5, 1.0, 3.0};
+    std::vector<float> bet_sizes = {1.0};
     ActionTree at(init_state, bet_sizes);
-    CFR cfr(abs, at);
+    CFR cfr(buckets, at);
     int iters = 500000;
+
+    steady::time_point start = steady::now();
     cfr.train(iters, 0);
+    steady::time_point end = steady::now();
+    std::cout << "Took " << std::chrono::duration<double>(end - start).count() << "s" << std::endl;
+    std::cout << "-------------------------------------------------" << std::endl;
 
 
-    std::string run_path = (root / "training/checkpoints/run_001/").string() ;
-    std::cout << "Do we get to here?" << std::endl;
-
-
+    std::string run_path = (root / "training/ckpts/run_0/").string() ;
     CheckPoint ck_pt{
         .regret_path = run_path + "regret_sum",
         .strategy_path = run_path + "strategy_sum",
@@ -55,16 +64,13 @@ int run_training(char** argv){
         .last_t_path = run_path + "last_t"
     };
     cfr.write_isets_check_point(ck_pt);
+
+    CFR new_cfr(ck_pt, buckets, at);
     return 0;
 }
 
 void train_and_time(char** argv){
-    steady::time_point start = steady::now();
     run_training(argv);
-    steady::time_point end = steady::now();
-
-    std::cout << "Took " << std::chrono::duration<double>(end - start).count() << "s" << std::endl;
-    std::cout << "-------------------------------------------------" << std::endl;
 }
 
 

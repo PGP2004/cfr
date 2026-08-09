@@ -35,32 +35,38 @@ InfoSets::InfoSets(const CheckPoint& ck_pt) {
     if (!(temp_vec.size() == 1)){throw std::runtime_error("The last_t vector should have size 1");}
     last_t = temp_vec[0];
 
-    auto [regret_sum, regret_header] = load_matrix_and_header<float>(ck_pt.regret_path);
+    auto [regret_sum, regret_header] = load_matrix_and_header<double>(ck_pt.regret_path);
 
-    auto [strategy_sum, strategy_header] = load_matrix_and_header<float>(ck_pt.strategy_path);
+    auto [strategy_sum, strategy_header] = load_matrix_and_header<double>(ck_pt.strategy_path);
 
     auto [offsets, offset_header] = load_matrix_and_header<size_t>(ck_pt.offset_path);
 }
 
 void InfoSets::write_check_point(const CheckPoint& ck_pt){
 
+    std::cout << "make it into check point writing phase" << std::endl;
+
     MatrixHeader regret_header{
         .num_rows = regret_sum.size(),
         .num_cols = 1,
-        .bytes_per_elt = sizeof(float),
+        .bytes_per_elt = sizeof(double),
         .is_signed = true,
         .is_float = true
     };
     write_matrix_and_header(ck_pt.regret_path, regret_header, regret_sum);
 
+    std::cout << "finish writing regret_sum" << std::endl;
+
     MatrixHeader strategy_header{
         .num_rows = strategy_sum.size(),
         .num_cols = 1,
-        .bytes_per_elt = sizeof(float),
+        .bytes_per_elt = sizeof(double),
         .is_signed = true,
         .is_float = true
     };
     write_matrix_and_header(ck_pt.strategy_path, strategy_header, strategy_sum);
+
+    std::cout << "finish writing strategy sum" << std::endl;
 
     MatrixHeader offset_header{
         .num_rows = offsets.size(),
@@ -71,6 +77,8 @@ void InfoSets::write_check_point(const CheckPoint& ck_pt){
     };
     write_matrix_and_header(ck_pt.offset_path, offset_header, offsets);
 
+    std::cout << "finish writing offsets" << std::endl;
+
     MatrixHeader last_t_header{
         .num_rows = 1,
         .num_cols = 1,
@@ -80,6 +88,8 @@ void InfoSets::write_check_point(const CheckPoint& ck_pt){
     };
     std::vector<int> temp_vec = {last_t};
     write_matrix_and_header(ck_pt.last_t_path, last_t_header, temp_vec);
+
+    std::cout << "finish writing last_t" << std::endl;
 }
 
 void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas) {
@@ -120,6 +130,25 @@ void InfoSets::get_regret_strategy(const InfoKey& ikey, std::vector<double>& out
         
     if (total_sum > 0.0) {
         for (size_t i = 0; i < n; i++) output[i] = std::max(0.0, regret_sum[offset+i]) / total_sum;
+    }
+
+    else {
+        double uniform = 1.0 / n;
+        for (size_t i = 0; i < n; i++) output[i] = uniform;
+    }
+}
+
+void InfoSets::get_strategy(const InfoKey& ikey, std::vector<double>& output) const{
+    size_t offset = get_offset(ikey);
+    size_t n = ikey.num_actions;
+    
+    output.resize(n);
+    double total_sum = 0.0;
+
+    for (size_t i = 0; i < n; ++i) total_sum += std::max(strategy_sum[offset+i], 0.0);
+        
+    if (total_sum > 0.0) {
+        for (size_t i = 0; i < n; i++) output[i] = std::max(0.0, strategy_sum[offset+i]) / total_sum;
     }
 
     else {

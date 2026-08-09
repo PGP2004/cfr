@@ -102,3 +102,19 @@ void CFR::train(int num_iterations, int starting_iter) {
     }
 }
 
+double CFR::get_prob(const ActionTree& at, const Dealer& d, const Action& a){
+    InfoKey ikey = get_InfoKey(at, d);
+    std::vector<double> prob_vec;
+    infosets.get_strategy(ikey, prob_vec);
+
+    std::vector<Action> actions = at.pub_states[at.cur_idx].edge_labels;
+
+    for (size_t i = 0 ; i < prob_vec.size(); ++i){
+        if (a == actions[i]){
+            return prob_vec[i];
+        }
+    }
+
+    return -1.0;
+}
+

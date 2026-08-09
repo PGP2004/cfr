@@ -48,6 +48,8 @@ public:
 
     void get_regret_strategy(const InfoKey& ikey, std::vector<double>& output) const;
 
+    void get_strategy(const InfoKey& ikey, std::vector<double>& output) const;
+   
     size_t sample_regret(std::mt19937& rng, std::vector<double>& probs) const;
 
     void discount(int t);

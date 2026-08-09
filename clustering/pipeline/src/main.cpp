@@ -58,8 +58,8 @@ int run_pipeline(char** argv) {
         .seed = 42
     };
 
-    // run_stage(run_river_strengths, cfg, "Generating River Strengths");
-    // run_stage(run_river_clusters, cfg, "Generating River Strengths");
+    run_stage(run_river_strengths, cfg, "Generating River Strengths");
+    run_stage(run_river_clusters, cfg, "Generating River Strengths");
     run_stage(run_turn_cdfs, cfg, "Generating Turn CDFs");
     run_stage(run_turn_clusters, cfg, "Clustering Turn");
     run_stage(run_turn_distance_matrix, cfg, "Generating Turn Distance Matirx");
