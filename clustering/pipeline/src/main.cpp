@@ -5,9 +5,17 @@
 
 namespace fs = std::filesystem;
 using steady = std::chrono::steady_clock;
+using StageFunc = void(*)(const PipelineConfig&);
 
-void print_runtime(steady::time_point start_time, steady::time_point finish_time){
-    std::cout << "Took " << std::chrono::duration<double>(finish_time - start_time).count() << "s" << std::endl;
+void run_stage(StageFunc stage_func, PipelineConfig& cfg, std::string stage_name){
+    steady::time_point start_time = steady::now();
+    stage_func(cfg);
+    steady::time_point finish_time = steady::now();
+    std::cout << stage_name <<
+        "Took " <<
+        std::chrono::duration<double>(finish_time - start_time).count() <<
+        "seconds" <<
+        std::endl;
     std::cout << "-------------------------------------------------" << std::endl;
 }
 
@@ -17,10 +25,12 @@ int run_pipeline(char** argv) {
 
     Artifacts artifacts{
         .river_strengths = storage/"river_strengths",
+
         .turn_cdfs = storage/"turn_cdfs",
         .turn_cdf_centers = storage/"turn_cdf_centers",
         .turn_assignments = storage/"turn_assignments",
         .turn_distance_matrix = storage/"turn_distance_matrix",
+
         .flop_multisets = storage/"flop_multisets",
         .flop_ctrs_wts = storage/"flop_ctrs_wts",
         .flop_ctrs_verts = storage/"flop_ctrs_verts",
@@ -41,59 +51,23 @@ int run_pipeline(char** argv) {
         .seed = 42
     };
 
-    steady::time_point start_time;
-    steady::time_point finish_time;
-
-    start_time = steady::now();
-    run_river_strengths(cfg);
-    finish_time = steady::now();
-    print_runtime(start_time, finish_time);
-
-    start_time = steady::now();
-    run_turn_cdfs(cfg);
-    finish_time = steady::now();
-    std::cout << "finished turn_cdfs" << std::endl;
-    print_runtime(start_time, finish_time);
-
-    start_time = steady::now();
-    run_turn_clusters(cfg); 
-    finish_time = steady::now();
-    std::cout << "finished turn_clusters" << std::endl;
-    print_runtime(start_time, finish_time);
-
-    start_time = steady::now();
-    run_turn_distance_matrix(cfg); 
-    finish_time = steady::now();
-    std::cout << "finished turn_distance_matrix" << std::endl;
-    print_runtime(start_time, finish_time);
-
-    start_time = steady::now();
-    run_flop_multisets(cfg);
-    finish_time = steady::now();
-    std::cout << "finished flop_multisets" << std::endl;
-    print_runtime(start_time, finish_time);
-
-    start_time = steady::now();
-    run_flop_ev_sdev(cfg);
-    finish_time = steady::now();
-    std::cout << "finished flop_ev_sdev" << std::endl;
-    print_runtime(start_time, finish_time);
-
-    start_time = steady::now();
-    run_flop_clusters(cfg); 
-    finish_time = steady::now();
-    std::cout << "finished flop_clusters" << std::endl;
-    print_runtime(start_time, finish_time);
-
+    run_stage(run_river_strengths, cfg, "Generating River Strengths");
+    run_stage(run_turn_cdfs, cfg, "Generating Turn CDFs");
+    run_stage(run_turn_clusters, cfg, "Clustering Turn");
+    run_stage(run_turn_distance_matrix, cfg, "Generating Turn Distance Matirx");
+    run_stage(run_flop_multisets, cfg, "Generating Flop Multisets");
+    run_stage(run_flop_ev_sdev, cfg, "Generating Flop EV and Std Dev");
+    run_stage(run_flop_clusters, cfg, "Clustering Flop");
     return 0;
 }
+
 
 int main(int, char** argv) {
     try {
         return run_pipeline(argv);
     }
     catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 }
