@@ -29,7 +29,6 @@ inline int L1_dist(std::span<const int> a, std::span<const int> b){
 
 /// @brief Contains a series of vectors reused throughout the clustering algorithm.
 struct ClusterBuffer{
-   
     std::vector<size_t> counts; //counts[i] = number of points assigned to cluster i.
     std::vector<int> grouped; // Flattened array of points sorted by cluster, then by point index within each cluster
 

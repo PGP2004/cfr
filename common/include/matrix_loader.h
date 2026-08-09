@@ -77,11 +77,8 @@ std::pair<std::vector<T>, MatrixHeader> load_matrix_and_header(const std::string
 
     MatrixHeader header;
     in.read(reinterpret_cast<char*>(&header), sizeof(header));
-    header_type_check<T>(header);
-    
     if (in.gcount() != static_cast<std::streamsize>(sizeof(header))) throw std::runtime_error("missing header");
-
-
+    header_type_check<T>(header);
 
     uint64_t expected_bytes = header.num_rows * header.num_cols * header.bytes_per_elt;
     std::streampos here = in.tellg(); in.seekg(0, std::ios::end);

@@ -124,7 +124,7 @@ void init_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const v
     for (size_t i = 0; i < params.dim; ++i){
         c_buff.centers[i] = pts[first_center*params.dim + i];
     }
-    vector<int> min_d_cache(params.num_pts, INT_MAX); 
+    vector<uint64_t> min_d_cache(params.num_pts, INT_MAX); 
     uint64_t total = 0;
 
     for (size_t c = 1; c < params.num_clusters; ++c){
@@ -135,9 +135,9 @@ void init_centers(const ClusteringParams& params, ClusterBuffer& c_buff, const v
 
             span<const int>pt_span(&pts[p * params.dim], params.dim);
             span<const int>ctr_span(&c_buff.centers[(c-1) * params.dim], params.dim);
-            int dist = L1_dist(pt_span, ctr_span);
+            uint64_t dist = L1_dist(pt_span, ctr_span);
 
-            int dist_sq = dist*dist;
+            uint64_t dist_sq = dist*dist;
             if (dist_sq < min_d_cache[p]) min_d_cache[p] = dist_sq;
             total += min_d_cache[p];
         }

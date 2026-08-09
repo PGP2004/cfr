@@ -38,10 +38,10 @@ public:
     std::vector<TreeNode> nodes;
     std::vector<PublicState> pub_states;
 
-    // bet sizes encoded as floats where (0.333 = 1/3 pot bet)
-    std::vector<float> bet_sizes; 
+    //array of bet sizes per street with bet sizes encoded as floats where (0.333 = 1/3 pot bet)
+    std::vector<std::vector<float>> bet_sizes; 
 
-    ActionTree(const GameState& root_state, std::vector<float> bet_sizes);
+    ActionTree(const GameState& root_state, std::vector<std::vector<float>> bet_szs);
 
     void apply_action(size_t action_idx){
         if (action_idx >= nodes[cur_idx].child_idxs.size()){

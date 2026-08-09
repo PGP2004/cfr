@@ -13,6 +13,11 @@
 #include "action_tree.h"
 #include "dealer.h"
 
+struct PreflopStrategy{
+    std::vector<Action> actions;
+    std::unordered_map<std::string, std::vector<double>> probs;
+};
+
 class CFR {
 
     private:
@@ -32,11 +37,10 @@ class CFR {
 
     public:
 
-        CFR(CardBuckets& card_buckets, ActionTree& action_tree);
-        CFR(const CheckPoint& ck_pt, CardBuckets& card_buckets, ActionTree& action_tree);
+        CFR(CardBuckets buckets, ActionTree at);
+        CFR(const CheckPoint& ck_pt, CardBuckets buckets, ActionTree at);
+
         void write_isets_check_point(const CheckPoint& ck_pt){infosets.write_check_point(ck_pt);}
         void train(int num_iterations, int starting_iter);
-
-        double get_prob(InfoKey ikey, Action a);
-        std::unordered_map<std::string, double> preflop_probs(Action action);
+        PreflopStrategy get_preflop_strategy();
     };

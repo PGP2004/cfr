@@ -3,8 +3,8 @@ build/
 *.a
 
 # Data
-clustering/storage/
-training/preflop
+data/
+
 # macOS
 .DS_Store
 

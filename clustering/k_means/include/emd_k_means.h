@@ -12,7 +12,7 @@
  * @brief Approximate Earth Movers Distance (EMD) version of k-means clustering for
  * pdfs encoded multisets over fully connected weighted graphs. This is an implementation of algorithm two of the paper "Potential-Aware Imperfect-Recall
  * Abstraction with Earth Mover’s Distance in Imperfect-Information Games"
- * which can be found here: https://www.cs.cmu.edu/~sandholm/potential-aware_imperfect-recall.aaai14.multiset
+ * which can be found here: https://www.cs.cmu.edu/~sandholm/potential-aware_imperfect-recall.aaai14.pdf
  * I recomend reading the paper before the code.
  * 
  * @note This code uses non-standard encodings of probabily distributions.

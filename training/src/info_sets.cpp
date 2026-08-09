@@ -15,31 +15,32 @@ InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t>& clu
 
         int st = pub_state.street_idx;
         int num_actions = pub_state.edge_labels.size();
-        size_t num_clusters = cluster_counts[st];
-
         offsets.push_back(cum_total);
-        cum_total += num_actions*num_clusters;
+
+        if (num_actions != 0){
+            size_t num_clusters = cluster_counts[st];
+            cum_total += num_actions*num_clusters;
+        }
     }
 
     regret_sum.assign(cum_total, 0.0);
     strategy_sum.assign(cum_total, 0.0);
 }
 
-
 InfoSets::InfoSets(const CheckPoint& ck_pt) {
 
-    //todo:add check
-
     auto [temp_vec, last_t_header] = load_matrix_and_header<int>(ck_pt.last_t_path);
-
-    if (!(temp_vec.size() == 1)){throw std::runtime_error("The last_t vector should have size 1");}
+    if (temp_vec.size() != 1) throw std::runtime_error("The last_t vector should have size 1");
     last_t = temp_vec[0];
 
-    auto [regret_sum, regret_header] = load_matrix_and_header<double>(ck_pt.regret_path);
+    auto [loaded_regret, regret_header] = load_matrix_and_header<double>(ck_pt.regret_path);
+    regret_sum = std::move(loaded_regret);
 
-    auto [strategy_sum, strategy_header] = load_matrix_and_header<double>(ck_pt.strategy_path);
+    auto [loaded_strategy, strategy_header] = load_matrix_and_header<double>(ck_pt.strategy_path);
+    strategy_sum = std::move(loaded_strategy);
 
-    auto [offsets, offset_header] = load_matrix_and_header<size_t>(ck_pt.offset_path);
+    auto [loaded_offsets, offset_header] = load_matrix_and_header<size_t>(ck_pt.offset_path);
+    offsets = std::move(loaded_offsets);
 }
 
 void InfoSets::write_check_point(const CheckPoint& ck_pt){

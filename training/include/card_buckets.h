@@ -12,6 +12,12 @@ static size_t count_clusters(const std::vector<T>& assign) {
     return std::ranges::max(assign) + size_t{1};
 }
 
+struct BucketingPaths{
+    std::filesystem::path flop_path;
+    std::filesystem::path turn_path;
+    std::filesystem::path river_path;
+};
+
 struct CardBuckets {
     std::vector<int> preflop_clusters;
     std::vector<int> flop_clusters;
@@ -21,13 +27,11 @@ struct CardBuckets {
 
     CardBuckets() = default; 
 
-    CardBuckets(const std::string& flop_path,
-                const std::string& turn_path,
-                const std::string& river_path) {
-        set_clusters(flop_path, turn_path, river_path);
+    CardBuckets(const BucketingPaths& bp) {
+        set_clusters(bp);
     }
 
-    void set_clusters(const std::string& flop_path, const std::string&turn_path, const std::string& river_path){
+    void set_clusters(const BucketingPaths& bp){
 
         int num_preflops = 169;
         preflop_clusters.resize(num_preflops);
@@ -36,13 +40,13 @@ struct CardBuckets {
             preflop_clusters[i] = static_cast<int>(i);
         }
 
-        auto [fc, flop_header] = load_matrix_and_header<int>(flop_path);
+        auto [fc, flop_header] = load_matrix_and_header<int>(bp.flop_path.string());
         flop_clusters = std::move(fc);
 
-        auto[tc, turn_header] = load_matrix_and_header<int>(turn_path);
+        auto[tc, turn_header] = load_matrix_and_header<int>(bp.turn_path.string());
         turn_clusters = std::move(tc);
 
-        auto [rc, river_header] = load_matrix_and_header<int>(river_path);
+        auto [rc, river_header] = load_matrix_and_header<int>(bp.river_path.string());
         river_clusters = std::move(rc);
 
         cluster_counts.clear();

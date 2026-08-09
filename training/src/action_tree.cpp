@@ -31,6 +31,7 @@ std::vector<Action> ActionTree::get_actions(const GameState& state){
     int player = state.get_active_player();
     const std::array<int, 2> pips = state.get_pips();
     const std::array<int, 2> stacks = state.get_stacks();
+    int street = state.get_street();
 
     std::vector<Action> output = {
         {0, 0}, //fold
@@ -40,7 +41,7 @@ std::vector<Action> ActionTree::get_actions(const GameState& state){
 
     std::unordered_set<int> seen;
 
-    for (float x : bet_sizes){
+    for (float x : bet_sizes[street]){
 
         int chip_amt = raise_to_x_pot(x, player, pot, pips, stacks);
 
@@ -76,8 +77,8 @@ PublicState ActionTree::get_public_state(const GameState& state){
     return pub_state;
 }
 
-ActionTree::ActionTree(const GameState& root_state, std::vector<float> bet_sizes):
-    bet_sizes(bet_sizes){
+ActionTree::ActionTree(const GameState& root_state, std::vector<std::vector<float>> bet_szs):
+    bet_sizes(bet_szs){
 
     std::mt19937 rng(0);
     root_idx = 0;

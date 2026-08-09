@@ -11,18 +11,21 @@
 #include <array>
 #include <iostream>
 
-CFR::CFR(CardBuckets& buckets, ActionTree& action_tree): 
-    card_buckets(buckets), 
-    action_tree(action_tree),
-    infosets(action_tree, buckets.cluster_counts){
+
+CFR::CFR(CardBuckets buckets, ActionTree at):
+    card_buckets(std::move(buckets)),
+    action_tree(std::move(at)),
+    infosets(this->action_tree, this->card_buckets.cluster_counts) {
+
     VectorPool::preallocate(4, 200);
     iters_per_discount = 1000;
 }
 
-CFR::CFR(const CheckPoint& ck_pt, CardBuckets& buckets, ActionTree& action_tree): 
-    card_buckets(buckets), 
-    action_tree(action_tree),
-    infosets(ck_pt){
+CFR::CFR(const CheckPoint& ck_pt, CardBuckets buckets, ActionTree at):
+    card_buckets(std::move(buckets)),
+    action_tree(std::move(at)),
+    infosets(ck_pt) {
+        
     VectorPool::preallocate(4, 200);
     iters_per_discount = 1000;
 }
@@ -103,48 +106,39 @@ void CFR::train(int num_iterations, int starting_iter) {
     }
 }
 
-
-double CFR::get_prob(InfoKey ikey, Action a){
-
-    std::vector<double> strat_vec;
-    infosets.get_strategy(ikey, strat_vec);
-    std::vector<Action> actions = action_tree.pub_states[ikey.node_idx].edge_labels;
-    
-    for (size_t i = 0; i < actions.size(); ++i){
-        if (actions[i] == a){
-            return strat_vec[i];
-        }
-    }
-
-    return -1.0;
-}
-
-//chatbot function <- Clean at some point!
-std::unordered_map<std::string, double> CFR::preflop_probs(Action target_action) {
+//TODO: understand 
+PreflopStrategy CFR::get_preflop_strategy() {
     static const std::array<uint8_t, 1> cpr = {2};
     static Indexer idx{1, cpr.data()};
     static const std::array<std::string, 13> rank = {
         "2","3","4","5","6","7","8","9","T","J","Q","K","A"};
 
-    size_t root_idx = action_tree.root_idx;
-    size_t num_actions = action_tree.pub_states[root_idx].edge_labels.size();
+    const size_t root_idx = action_tree.root_idx;
 
-    auto prob = [&](uint8_t c0, uint8_t c1) {
-        uint8_t cards[2] = {c0, c1};
-        InfoKey ikey{root_idx, hand_index_last(&idx.h, cards), num_actions};
-        return get_prob(ikey, target_action);
+    PreflopStrategy out;
+    out.actions = action_tree.pub_states[root_idx].edge_labels;
+    const size_t n_actions = out.actions.size();
+
+    std::vector<double> strat;
+    uint8_t cards[2];
+
+    auto record = [&](const std::string& name, uint8_t c0, uint8_t c1) {
+        cards[0] = c0; cards[1] = c1;
+        InfoKey key{root_idx, hand_index_last(&idx.h, cards), n_actions};
+        infosets.get_strategy(key, strat);
+        out.probs.emplace(name, strat);
     };
 
-    std::unordered_map<std::string, double> output;
-    for (uint8_t hi = 0; hi < 13; ++hi) {
-        for (uint8_t lo = 0; lo <= hi; ++lo) {
-            if (hi == lo) { 
-                output[rank[hi] + rank[hi]] = prob(make_card(hi, 0), make_card(hi, 1));
-            } else {
-                output[rank[hi] + rank[lo] + "o"] = prob(make_card(hi, 0), make_card(lo, 1));
-                output[rank[hi] + rank[lo] + "s"] = prob(make_card(hi, 0), make_card(lo, 0));
-            }
+    for (uint8_t r = 0; r < rank.size(); ++r)
+        record(rank[r] + rank[r], make_card(r, 0), make_card(r, 1));
+
+    for (uint8_t hi = 1; hi < rank.size(); ++hi) {
+        for (uint8_t lo = 0; lo < hi; ++lo) {
+            const std::string base = rank[hi] + rank[lo];
+            record(base + "s", make_card(hi, 0), make_card(lo, 0));
+            record(base + "o", make_card(hi, 0), make_card(lo, 1));
         }
     }
-    return output;
+
+    return out;  
 }
