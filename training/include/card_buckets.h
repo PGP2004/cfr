@@ -12,7 +12,7 @@ static size_t count_clusters(const std::vector<T>& assign) {
     return std::ranges::max(assign) + size_t{1};
 }
 
-struct BucketingPaths{
+struct BucketPaths{
     std::filesystem::path flop_path;
     std::filesystem::path turn_path;
     std::filesystem::path river_path;
@@ -27,11 +27,11 @@ struct CardBuckets {
 
     CardBuckets() = default; 
 
-    CardBuckets(const BucketingPaths& bp) {
+    CardBuckets(const BucketPaths& bp) {
         set_clusters(bp);
     }
 
-    void set_clusters(const BucketingPaths& bp){
+    void set_clusters(const BucketPaths& bp){
 
         int num_preflops = 169;
         preflop_clusters.resize(num_preflops);

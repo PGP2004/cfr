@@ -23,7 +23,7 @@ void run_and_time(char** argv){
     fs::path buckets_path = root / "data" / "clustering";
     fs::path runs_path = root / "data" / "runs";
 
-    BucketingPaths bucketing_paths{
+    BucketPaths bucketing_paths{
         .flop_path = buckets_path / "flop_assignments",
         .turn_path = buckets_path / "turn_assignments",
         .river_path = buckets_path / "river_assignments"
@@ -69,4 +69,3 @@ int main(int, char** argv) {
 
     return 0;
 }
-

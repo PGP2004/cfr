@@ -16,7 +16,7 @@
 
 struct Trainer{
 
-    BucketingPaths bp;
+    BucketPaths bp;
 
     GameState game_state;
     std::vector<std::vector<float>> bet_sizes;
@@ -30,6 +30,3 @@ struct Trainer{
 };
 
 void run_training(const Trainer& trainer);
-
-
-

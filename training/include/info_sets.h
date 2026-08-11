@@ -8,11 +8,11 @@
 #include <utility>
 #include <random>
 
-struct CheckPoint{
+struct ISetsCkpt{
     std::string regret_path;
     std::string strategy_path;
     std::string offset_path;
-    std::string last_t_path;
+    std::string iter_info_path;
 };
 
 struct InfoKey {
@@ -23,24 +23,23 @@ struct InfoKey {
 
 class InfoSets {
     
-private: 
-
-    std::vector<size_t> offsets;  
-    std::vector<double> regret_sum; 
-    std::vector<double> strategy_sum; 
-    int last_t = 0;
+public:
 
     inline size_t get_offset(const InfoKey& ikey)  const{
         return offsets[ikey.node_idx] + ikey.cluster_idx*ikey.num_actions;
     }
 
-public:
+    std::vector<size_t> offsets;  
+    std::vector<double> regret_sum; 
+    std::vector<double> strategy_sum; 
+    int last_discount_iter = 0;
+    int cur_iter = 0;
 
     explicit InfoSets(const ActionTree& action_tree, const std::vector<size_t>& cluster_counts);
 
-    explicit InfoSets(const CheckPoint& ck_pt);
+    explicit InfoSets(const ISetsCkpt& ck_pt);
 
-    void write_check_point(const CheckPoint& ck_pt);
+    void write_check_point(const ISetsCkpt& ck_pt);
 
     void update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas);
 

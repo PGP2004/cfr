@@ -71,20 +71,22 @@ std::pair<fs::path, fs::path> make_run_dirs(const Trainer& trainer) {
 
 void run_training(const Trainer& trainer) {
 
+    int iters_per_discount = 10'000;
+
     std::pair<fs::path, fs::path> new_paths = make_run_dirs(trainer);
     fs::path preflop_path = new_paths.first;
     fs::path infosets_path = new_paths.second;
 
     ActionTree at{trainer.game_state, trainer.bet_sizes};
     CardBuckets buckets(trainer.bp);
-    CFR cfr{std::move(buckets), std::move(at)};
+    CFR cfr{std::move(buckets), std::move(at), iters_per_discount};
 
     int cur_iter = 0;
 
     for (int ckpt : trainer.preflop_ckpts) {
         if (ckpt > trainer.max_iters) break;
 
-        cfr.train(ckpt - cur_iter, cur_iter);
+        cfr.train(ckpt - cur_iter);
         cur_iter = ckpt;
 
         std::string csv_name = "iter_"  + fmt_iters(cur_iter) + ".csv";

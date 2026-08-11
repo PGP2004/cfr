@@ -27,11 +27,11 @@ InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t>& clu
     strategy_sum.assign(cum_total, 0.0);
 }
 
-InfoSets::InfoSets(const CheckPoint& ck_pt) {
+InfoSets::InfoSets(const ISetsCkpt& ck_pt) {
 
-    auto [temp_vec, last_t_header] = load_matrix_and_header<int>(ck_pt.last_t_path);
-    if (temp_vec.size() != 1) throw std::runtime_error("The last_t vector should have size 1");
-    last_t = temp_vec[0];
+    auto [iter_info, temp_header] = load_matrix_and_header<int>(ck_pt.iter_info_path);
+    if (iter_info.size() != 2) throw std::runtime_error("The iter_info vector should have size 1");
+    last_discount_iter = iter_info[0]; cur_iter = iter_info[1];
 
     auto [loaded_regret, regret_header] = load_matrix_and_header<double>(ck_pt.regret_path);
     regret_sum = std::move(loaded_regret);
@@ -43,9 +43,7 @@ InfoSets::InfoSets(const CheckPoint& ck_pt) {
     offsets = std::move(loaded_offsets);
 }
 
-void InfoSets::write_check_point(const CheckPoint& ck_pt){
-
-    std::cout << "make it into check point writing phase" << std::endl;
+void InfoSets::write_check_point(const ISetsCkpt& ck_pt){
 
     MatrixHeader regret_header{
         .num_rows = regret_sum.size(),
@@ -56,7 +54,6 @@ void InfoSets::write_check_point(const CheckPoint& ck_pt){
     };
     write_matrix_and_header(ck_pt.regret_path, regret_header, regret_sum);
 
-    std::cout << "finish writing regret_sum" << std::endl;
 
     MatrixHeader strategy_header{
         .num_rows = strategy_sum.size(),
@@ -67,8 +64,6 @@ void InfoSets::write_check_point(const CheckPoint& ck_pt){
     };
     write_matrix_and_header(ck_pt.strategy_path, strategy_header, strategy_sum);
 
-    std::cout << "finish writing strategy sum" << std::endl;
-
     MatrixHeader offset_header{
         .num_rows = offsets.size(),
         .num_cols = 1,
@@ -78,19 +73,15 @@ void InfoSets::write_check_point(const CheckPoint& ck_pt){
     };
     write_matrix_and_header(ck_pt.offset_path, offset_header, offsets);
 
-    std::cout << "finish writing offsets" << std::endl;
-
-    MatrixHeader last_t_header{
-        .num_rows = 1,
+    MatrixHeader iter_info_header{
+        .num_rows = 2,
         .num_cols = 1,
         .bytes_per_elt = sizeof(int),
         .is_signed = true,
         .is_float = false
     };
-    std::vector<int> temp_vec = {last_t};
-    write_matrix_and_header(ck_pt.last_t_path, last_t_header, temp_vec);
-
-    std::cout << "finish writing last_t" << std::endl;
+    std::vector<int> temp_vec = {last_discount_iter, cur_iter};
+    write_matrix_and_header(ck_pt.iter_info_path, iter_info_header, temp_vec);
 }
 
 void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas) {
@@ -174,10 +165,10 @@ size_t InfoSets::sample_regret( std::mt19937& rng, std::vector<double>& probs) c
 
 void InfoSets::discount(int t) {
 
-    if (t <= last_t) throw std::runtime_error("discount: t must exceed last_t");
+    if (t <= last_discount_iter) throw std::runtime_error("discount: t must exceed last_discounter_iter");
 
-    double f = double(last_t + 1) / double(t + 1);
+    double f = double(last_discount_iter + 1) / double(t + 1);
     for (double& r : regret_sum)   r *= f;
     for (double& s : strategy_sum) s *= f;
-    last_t = t;
+    last_discount_iter = t;
 }

@@ -2,15 +2,34 @@ TODO: Improve the matrix header to store if its signed and if its boolean <- Don
 - Use this to make a checkpoint to save and get back the infoset state <- Done!
 - Add a river clustering stage <- Done! 
 
-TODO: Go thru fable review and address the issues it brough up 1
-Clean up the training main whihc is a complete mess right now 2
-Get preflops off of github 3
+TODO: Go thru fable review and address the issues it brough up <-Done!
 
 Chatslopped and need to unslop:
 - Write a function to extract the preflop range 
 - Do some data analysis to see if it looks right
 
 
+TODO: <- Clean up the trainer to be more clearly split
+    -> Idea: LogParams and TrainParams and state
+
+    LogParams: folder to log to 
+    - preflop and infoset checkpoints
+
+    TrainParams: Numiters to train 
+    - Starting iter 
+
+    State -> Buckets + InfoSet + iters_per_discount
+
+    
 - Set off a longer training run 
 TODO: Launch a longer training run and see if the CFR works
+
+Clean up thr run Trainer -> essentially it should be using something like this I think!
+
+// struct CFRConfig{
+//     std::optional<ISetsCkpt> iset_ckpt;
+//     BucketPaths bucket_paths;
+//     std::vector<std::vector<float>> bet_sizes;
+//     int iters_per_discount;
+// };
 

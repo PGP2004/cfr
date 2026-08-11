@@ -41,7 +41,7 @@ public:
     //array of bet sizes per street with bet sizes encoded as floats where (0.333 = 1/3 pot bet)
     std::vector<std::vector<float>> bet_sizes; 
 
-    ActionTree(const GameState& root_state, std::vector<std::vector<float>> bet_szs);
+    ActionTree(const GameState& root_state, const std::vector<std::vector<float>>& bet_szs);
 
     void apply_action(size_t action_idx){
         if (action_idx >= nodes[cur_idx].child_idxs.size()){
@@ -65,5 +65,9 @@ public:
     double get_payoff(int player) const{ return pub_states[cur_idx].payoffs[player];}
 
     void restart() {cur_idx = root_idx;}
+
+    size_t depth() const;
+
+    size_t max_branching() const;
 
 };

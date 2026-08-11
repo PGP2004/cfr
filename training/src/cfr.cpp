@@ -2,7 +2,6 @@
 #include "info_sets.h"
 #include "card_buckets.h"
 #include "cfr.h"    
-#include "vector_pool.h"
 
 #include <unordered_map>
 #include <memory>
@@ -12,22 +11,14 @@
 #include <iostream>
 
 
-CFR::CFR(CardBuckets buckets, ActionTree at):
+CFR::CFR(CardBuckets buckets, ActionTree at, int iters_per_discount):
     card_buckets(std::move(buckets)),
     action_tree(std::move(at)),
-    infosets(this->action_tree, this->card_buckets.cluster_counts) {
+    infosets(this->action_tree, this->card_buckets.cluster_counts),
+    iters_per_discount(iters_per_discount){
 
-    VectorPool::preallocate(4, 200);
-    iters_per_discount = 1000;
-}
-
-CFR::CFR(const CheckPoint& ck_pt, CardBuckets buckets, ActionTree at):
-    card_buckets(std::move(buckets)),
-    action_tree(std::move(at)),
-    infosets(ck_pt) {
-        
-    VectorPool::preallocate(4, 200);
-    iters_per_discount = 1000;
+    probs_scratch.assign(action_tree.depth() + 1, std::vector<double>(action_tree.max_branching()));
+    deltas_scratch.assign(action_tree.depth() + 1, std::vector<double>(action_tree.max_branching()));
 }
 
 InfoKey CFR::get_InfoKey(const ActionTree& at, const Dealer& d) {
@@ -37,7 +28,7 @@ InfoKey CFR::get_InfoKey(const ActionTree& at, const Dealer& d) {
     return {n.node_idx, (size_t)card_buckets.cluster_of(street, hand_id), n.child_idxs.size()};
 }
 
-double CFR::traverse_helper(int player) {
+double CFR::traverse_helper(int player, int depth) {
 
     if (action_tree.is_terminal()) {
         return dealer.get_reward(player, action_tree);
@@ -46,28 +37,26 @@ double CFR::traverse_helper(int player) {
     int active_player = action_tree.active_player();
 
     if (active_player != player) {
-        InfoKey ikey = get_InfoKey(action_tree, dealer);
-        VectorPool::ProbsBuffer probs_buf;
-        auto& probs = probs_buf.get();
 
+        std::vector<double>&probs = probs_scratch[depth];
+
+        InfoKey ikey = get_InfoKey(action_tree, dealer);
         infosets.get_regret_strategy(ikey, probs);
         infosets.update_strategy(ikey, probs); 
 
         size_t sampled_idx = infosets.sample_regret(rng, probs);
         action_tree.apply_action(sampled_idx);
-        double util = traverse_helper(player);
+        double util = traverse_helper(player, depth + 1);
         action_tree.undo_action();
 
         return util;
     }
 
     // Branch where active player = current player
-    InfoKey ikey = get_InfoKey(action_tree, dealer);
-    VectorPool::ProbsBuffer probs_buf;
-    VectorPool::DeltaBuffer delta_buf;
-    std::vector<double>& probs = probs_buf.get();
-    std::vector<double>& action_deltas = delta_buf.get();
+    std::vector<double>& probs = probs_scratch[depth];
+    std::vector<double>& action_deltas = deltas_scratch[depth];
 
+    InfoKey ikey = get_InfoKey(action_tree, dealer);
     infosets.get_regret_strategy(ikey, probs);
     action_deltas.assign(ikey.num_actions, 0.0);
 
@@ -76,7 +65,7 @@ double CFR::traverse_helper(int player) {
     for (size_t i = 0; i < ikey.num_actions; i++) {
 
         action_tree.apply_action(i);
-        double action_util = traverse_helper(player);
+        double action_util = traverse_helper(player, depth + 1);
         action_tree.undo_action();
 
         node_util += probs[i] * action_util;
@@ -94,15 +83,24 @@ double CFR::traverse_helper(int player) {
 void CFR::traverse(int player){
     dealer.deal(rng);
     action_tree.restart();
-    traverse_helper(player);
+    traverse_helper(player, 0);
 }
 
-void CFR::train(int num_iterations, int starting_iter) {
+void CFR::train(int num_iters) {
 
-    for (int i = starting_iter; i < starting_iter + num_iterations; ++i) {
+    int starting_iter = infosets.cur_iter;
+
+    for (int i = 0; i < num_iters; ++i) {
         traverse(0); 
         traverse(1);
-        if (i % iters_per_discount == 0 && i != 0) infosets.discount(i);
+        infosets.cur_iter += 1;
+
+        if ((i+starting_iter) % iters_per_discount == 0 && i != 0){
+            infosets.discount(i+starting_iter);
+        }
+
+        infosets.cur_iter +=1;
+
     }
 }
 

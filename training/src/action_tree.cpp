@@ -77,7 +77,51 @@ PublicState ActionTree::get_public_state(const GameState& state){
     return pub_state;
 }
 
-ActionTree::ActionTree(const GameState& root_state, std::vector<std::vector<float>> bet_szs):
+size_t ActionTree::max_branching() const {
+
+    std::vector<size_t> q;
+
+    //vector of nodes w format (node_idx, node_depth)
+    q.push_back(root_idx); 
+    size_t max_branching = 0;
+
+    while (q.size() != 0){
+        size_t v = q[q.size()-1];
+        q.pop_back();
+        size_t node_branching = nodes[v].child_idxs.size();
+        max_branching = std::max(max_branching, node_branching);
+
+        for (size_t child_idx : nodes[v].child_idxs){
+            q.push_back(child_idx);
+        }
+    }
+
+    return max_branching;
+}
+
+size_t ActionTree::depth() const {
+
+    std::vector<std::array<size_t, 2>> q;
+
+    //vector of nodes w format (node_idx, node_depth)
+    q.push_back({root_idx, 1}); 
+
+    size_t max_depth = 0;
+
+    while (q.size() != 0){
+        std::array<size_t, 2> v = q[q.size()-1];
+        q.pop_back();
+        
+        max_depth = std::max(max_depth, v[1]);
+        for (size_t child_idx : nodes[v[0]].child_idxs){
+            q.push_back({child_idx, v[1]+1});
+        }
+    }
+
+    return max_depth;
+}
+
+ActionTree::ActionTree(const GameState& root_state, const std::vector<std::vector<float>>& bet_szs):
     bet_sizes(bet_szs){
 
     std::mt19937 rng(0);
