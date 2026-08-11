@@ -11,11 +11,10 @@
 #include <iostream>
 
 
-CFR::CFR(CardBuckets buckets, ActionTree at, int iters_per_discount):
+CFR::CFR(CardBuckets buckets, ActionTree at):
     card_buckets(std::move(buckets)),
     action_tree(std::move(at)),
-    infosets(this->action_tree, this->card_buckets.cluster_counts),
-    iters_per_discount(iters_per_discount){
+    infosets(this->action_tree, this->card_buckets.cluster_counts){
 
     probs_scratch.assign(action_tree.depth() + 1, std::vector<double>(action_tree.max_branching()));
     deltas_scratch.assign(action_tree.depth() + 1, std::vector<double>(action_tree.max_branching()));
@@ -86,7 +85,7 @@ void CFR::traverse(int player){
     traverse_helper(player, 0);
 }
 
-void CFR::train(int num_iters) {
+void CFR::train(int num_iters, int iters_per_discount) {
 
     int starting_iter = infosets.cur_iter;
 
@@ -102,41 +101,4 @@ void CFR::train(int num_iters) {
         infosets.cur_iter +=1;
 
     }
-}
-
-//TODO: understand 
-PreflopStrategy CFR::get_preflop_strategy() {
-    static const std::array<uint8_t, 1> cpr = {2};
-    static Indexer idx{1, cpr.data()};
-    static const std::array<std::string, 13> rank = {
-        "2","3","4","5","6","7","8","9","T","J","Q","K","A"};
-
-    const size_t root_idx = action_tree.root_idx;
-
-    PreflopStrategy out;
-    out.actions = action_tree.pub_states[root_idx].edge_labels;
-    const size_t n_actions = out.actions.size();
-
-    std::vector<double> strat;
-    uint8_t cards[2];
-
-    auto record = [&](const std::string& name, uint8_t c0, uint8_t c1) {
-        cards[0] = c0; cards[1] = c1;
-        InfoKey key{root_idx, hand_index_last(&idx.h, cards), n_actions};
-        infosets.get_strategy(key, strat);
-        out.probs.emplace(name, strat);
-    };
-
-    for (uint8_t r = 0; r < rank.size(); ++r)
-        record(rank[r] + rank[r], make_card(r, 0), make_card(r, 1));
-
-    for (uint8_t hi = 1; hi < rank.size(); ++hi) {
-        for (uint8_t lo = 0; lo < hi; ++lo) {
-            const std::string base = rank[hi] + rank[lo];
-            record(base + "s", make_card(hi, 0), make_card(lo, 0));
-            record(base + "o", make_card(hi, 0), make_card(lo, 1));
-        }
-    }
-
-    return out;  
 }
