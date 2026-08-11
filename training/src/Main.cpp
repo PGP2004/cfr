@@ -28,13 +28,17 @@ void run_and_time(char** argv){
         .turn_path = buckets_path / "turn_assignments",
         .river_path = buckets_path / "river_assignments"
     };
-
+        
     std::vector<std::vector<float>> bet_sizes = {
-        {1.0f}, // preflop
-        {0.33f, 1.0f}, // flop
-        {0.75f, 1.5f}, // turn
-        {0.75f, 1.5f}  // river
+        {0.5f, 1.0f},          // preflop: ~2.5bb open, pot-sized 3bet
+        {0.33f, 0.75f, 1.5f},  // flop
+        {0.75f, 1.5f},         // turn
+        {0.75f, 1.25f},        // river
     };
+
+    int k = 1'000;
+    int m = 1'000'000;
+    int b = 1'000'000'000;
 
     Trainer trainer{
         .bp =  bucketing_paths,
@@ -44,8 +48,10 @@ void run_and_time(char** argv){
         .runs_folder = runs_path ,
         .run_name = "run_001",
 
-        .preflop_ckpts =  {1'000, 10'000, 100'000, 1'000'000, 10'000'000, 100'000'000},
-        .max_iters = 100'000'000,
+        .preflop_ckpts = {1*k, 10*k, 1*m, 10*m, 100*m, 250*m,
+            500*m, 750*m, 1*b},
+            
+        .max_iters = 1*b
     };
 
     steady::time_point start = steady::now();

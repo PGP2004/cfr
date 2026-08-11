@@ -15,7 +15,7 @@
 
 class CFR {
 
-    public:
+    private:
         CardBuckets card_buckets;
         ActionTree action_tree;
         Dealer dealer;
@@ -26,14 +26,21 @@ class CFR {
         std::vector<std::vector<double>> probs_scratch;
         std::vector<std::vector<double>> deltas_scratch;
 
-        InfoKey get_InfoKey(const ActionTree& at, const Dealer& d);
         double traverse_helper(int player, int depth);
+
+    public:
+        CFR(CardBuckets buckets, ActionTree at);
+        CFR(InfoSets isets, CardBuckets buckets, ActionTree at);
+
+        InfoKey get_InfoKey(const ActionTree& at, const Dealer& d);
+ 
         void traverse(int player);
+        void train(int num_iters, int iters_per_discount);
 
         void write_check_point(ISetsCkpt ck_pt);
-
-        CFR(CardBuckets buckets, ActionTree at);
         void write_isets_check_point(const ISetsCkpt& ck_pt){infosets.write_check_point(ck_pt);}
-        void train(int num_iters, int iters_per_discount);
+
+        const ActionTree& get_action_tree()const {return action_tree;}
+        const InfoSets& get_infosets()const {return infosets;}
 
     };
