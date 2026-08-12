@@ -26,6 +26,8 @@ static std::string fmt_iters(int n) {
     return std::to_string(n);
 }
 
+
+//clauded need to do more carefully
 void write_preflop_csv(const std::string& path, const CFR& cfr) {
     static const std::array<uint8_t, 1> cpr = {2};
     static Indexer idx{1, cpr.data()};

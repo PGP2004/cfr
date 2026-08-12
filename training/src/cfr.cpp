@@ -3,13 +3,11 @@
 #include "card_buckets.h"
 #include "cfr.h"    
 
-#include <unordered_map>
 #include <memory>
 #include <utility>
 #include <vector>
 #include <array>
 #include <iostream>
-
 
 CFR::CFR(CardBuckets buckets, ActionTree at):
     card_buckets(std::move(buckets)),
@@ -98,7 +96,6 @@ void CFR::train(int num_iters, int iters_per_discount) {
             infosets.discount(i+starting_iter);
         }
 
-        infosets.cur_iter +=1;
 
     }
 }
