@@ -37,8 +37,6 @@ class CFR {
         void traverse(int player);
         void train(int num_iters, int iters_per_discount);
 
-        void write_check_point(ISetsCkpt ck_pt);
-        void write_isets_check_point(const ISetsCkpt& ck_pt){infosets.write_check_point(ck_pt);}
 
         const ActionTree& get_action_tree()const {return action_tree;}
         const InfoSets& get_infosets()const {return infosets;}

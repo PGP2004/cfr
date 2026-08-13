@@ -18,6 +18,15 @@ CFR::CFR(CardBuckets buckets, ActionTree at):
     deltas_scratch.assign(action_tree.depth() + 1, std::vector<double>(action_tree.max_branching()));
 }
 
+CFR::CFR(InfoSets isets, CardBuckets buckets, ActionTree at):
+    card_buckets(std::move(buckets)),
+    action_tree(std::move(at)),
+    infosets(std::move(isets)){
+
+    probs_scratch.assign(action_tree.depth() + 1, std::vector<double>(action_tree.max_branching()));
+    deltas_scratch.assign(action_tree.depth() + 1, std::vector<double>(action_tree.max_branching()));
+}
+
 InfoKey CFR::get_InfoKey(const ActionTree& at, const Dealer& d) {
     const TreeNode& n = at.nodes[at.cur_idx];
     int street = at.street();

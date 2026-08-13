@@ -9,6 +9,8 @@ TODO:
 - Split the data analysis up and also unslop it a bit
 - Cleaner Training Script -> 
 
+- Make it MultiThreaded and speed up the clustering <- Finish!
+
 struct CFRConfig{
         std::optional<ISetsCkpt> iset_ckpt;
         BucketPaths bucket_paths;

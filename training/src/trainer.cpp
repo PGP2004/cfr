@@ -17,15 +17,29 @@
 namespace fs = std::filesystem;
 
 static std::string fmt_iters(int n) {
-    if (n % 1'000'000'000 == 0 && n >= 1'000'000'000)
-        return std::to_string(n / 1'000'000'000) + "B";
-    if (n % 1'000'000 == 0 && n >= 1'000'000)
-        return std::to_string(n / 1'000'000) + "M";
-    if (n % 1'000 == 0 && n >= 1'000)
-        return std::to_string(n / 1'000) + "k";
+
+    int b = 1'000'000'000; 
+    int m = 1'000'000;
+    int k = 1'00;
+
+    if (n % b == 0 && n >= b) return std::to_string(n / b) + "B";
+    if (n % m == 0 && n >= m) return std::to_string(n / m) + "M";
+    if (n % k == 0 && n >= k) return std::to_string(n / 1'000) + "k";
+
     return std::to_string(n);
 }
 
+CFR load_ckpt(CFRSpec spec) {
+    CardBuckets buckets{spec.bucket_paths};
+    ActionTree action_tree{GameState{}, spec.bet_sizes};
+
+    if (spec.isets_paths) {
+        InfoSets isets{*spec.isets_paths};
+        return CFR{std::move(isets), std::move(buckets), std::move(action_tree)};
+    }
+
+    return CFR{std::move(buckets), std::move(action_tree)};
+}
 
 //clauded need to do more carefully
 void write_preflop_csv(const std::string& path, const CFR& cfr) {
@@ -76,50 +90,28 @@ void write_preflop_csv(const std::string& path, const CFR& cfr) {
     if (!out) throw std::runtime_error("write failed: " + path);
 }
 
-std::pair<fs::path, fs::path> make_run_dirs(const Trainer& trainer) {
 
-    fs::path preflop_path = trainer.runs_folder / trainer.run_name / "preflop";
-    fs::path infosets_path = trainer.runs_folder / trainer.run_name / "infosets";
+std::pair<fs::path, fs::path> set_up_directories(const LogParams& log_params) {
 
-    std::pair<fs::path, fs::path> output{preflop_path, infosets_path};
+    fs::path run_root = log_params.folder / log_params.run_name;
+    fs::path preflop_path = run_root / "preflop";
+    fs::path infosets_path = run_root / "infosets";
 
-    if (trainer.preflop_ckpts.size() > 0){
-        if (fs::exists(preflop_path)) throw std::runtime_error("run folder already exists: " + preflop_path.string());
+    if (fs::exists(run_root))
+        throw std::runtime_error("run folder already exists: " + run_root.string());
+
+    if (!log_params.preflop_ckpts.empty())
         fs::create_directories(preflop_path);
-    }
 
-    if (trainer.store_infosets){
-        if (fs::exists(preflop_path)) throw std::runtime_error("run folder already exists: " + preflop_path.string());
-        fs::create_directories(preflop_path);
-    }
-
-    return output;
 }
 
 
-void run_training(const Trainer& trainer) {
+void run_training(CFRSpec spec, const LogParams& log_params, int iters_per_discount){
 
-    int iters_per_discount = 10'000;
-
-    std::pair<fs::path, fs::path> new_paths = make_run_dirs(trainer);
-    fs::path preflop_path = new_paths.first;
-    fs::path infosets_path = new_paths.second;
-
-    ActionTree at{trainer.game_state, trainer.bet_sizes};
-    CardBuckets buckets(trainer.bp);
-    CFR cfr{std::move(buckets), std::move(at)};
+    set_up_directories(log_params);
+    CFR cfr = load_cfr(spec);
 
     int cur_iter = 0;
 
-    for (int ckpt : trainer.preflop_ckpts) {
-        if (ckpt > trainer.max_iters) break;
-
-        cfr.train(ckpt - cur_iter, iters_per_discount);
-        cur_iter = ckpt;
-
-        std::string csv_name = "iter_"  + fmt_iters(cur_iter) + ".csv";
-        std::string csv_path = (preflop_path / csv_name).string();
-        
-        write_preflop_csv(csv_path, cfr);
-    }
+    //finish this loading function!
 }

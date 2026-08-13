@@ -8,7 +8,7 @@
 #include <utility>
 #include <random>
 
-struct ISetsCkpt{
+struct ISetsPaths{
     std::string regret_path;
     std::string strategy_path;
     std::string offset_path;
@@ -37,9 +37,9 @@ public:
 
     explicit InfoSets(const ActionTree& action_tree, const std::vector<size_t>& cluster_counts);
 
-    explicit InfoSets(const ISetsCkpt& ck_pt);
+    explicit InfoSets(const ISetsPaths& paths);
 
-    void write_check_point(const ISetsCkpt& ck_pt);
+    void write_check_point(const ISetsPaths& paths);
 
     void update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas);
 

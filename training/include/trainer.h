@@ -9,24 +9,24 @@
 
 #include "card_buckets.h"
 #include "cfr.h"
-#include "game_state.h"
+
 #include "info_sets.h"
 #include "action_tree.h"
 
-
-struct Trainer{
-
-    BucketPaths bp;
-
-    GameState game_state;
-    std::vector<std::vector<float>> bet_sizes;
-
-    std::filesystem::path runs_folder;
-    std::filesystem::path run_name;
-
+struct LogParams {
+    std::filesystem::path folder;     
+    std::string run_name;            
+    std::string preflop_subdir;     
     std::vector<int> preflop_ckpts;
-    int max_iters;
     bool store_infosets;
 };
 
-void run_training(const Trainer& trainer);
+struct CFRSpec{
+    std::optional<ISetsPaths> isets_paths;
+    BucketPaths bucket_paths;
+    std::vector<std::vector<float>> bet_sizes;
+};
+
+CFR load_cfr(CFRSpec spec);
+void write_preflop_csv(const std::string& path, const CFR& cfr);
+void run_training(CFRSpec spec, const LogParams& log_params, int iters_per_discount);

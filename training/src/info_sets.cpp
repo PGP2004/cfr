@@ -27,23 +27,23 @@ InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t>& clu
     strategy_sum.assign(cum_total, 0.0);
 }
 
-InfoSets::InfoSets(const ISetsCkpt& ck_pt) {
+InfoSets::InfoSets(const ISetsPaths& paths) {
 
-    auto [iter_info, temp_header] = load_matrix_and_header<int>(ck_pt.iter_info_path);
+    auto [iter_info, temp_header] = load_matrix_and_header<int>(paths.iter_info_path);
     if (iter_info.size() != 2) throw std::runtime_error("The iter_info vector should have size 1");
     last_discount_iter = iter_info[0]; cur_iter = iter_info[1];
 
-    auto [loaded_regret, regret_header] = load_matrix_and_header<double>(ck_pt.regret_path);
+    auto [loaded_regret, regret_header] = load_matrix_and_header<double>(paths.regret_path);
     regret_sum = std::move(loaded_regret);
 
-    auto [loaded_strategy, strategy_header] = load_matrix_and_header<double>(ck_pt.strategy_path);
+    auto [loaded_strategy, strategy_header] = load_matrix_and_header<double>(paths.strategy_path);
     strategy_sum = std::move(loaded_strategy);
 
-    auto [loaded_offsets, offset_header] = load_matrix_and_header<size_t>(ck_pt.offset_path);
+    auto [loaded_offsets, offset_header] = load_matrix_and_header<size_t>(paths.offset_path);
     offsets = std::move(loaded_offsets);
 }
 
-void InfoSets::write_check_point(const ISetsCkpt& ck_pt){
+void InfoSets::write_check_point(const ISetsPaths& paths){
 
     MatrixHeader regret_header{
         .num_rows = regret_sum.size(),
@@ -52,7 +52,7 @@ void InfoSets::write_check_point(const ISetsCkpt& ck_pt){
         .is_signed = true,
         .is_float = true
     };
-    write_matrix_and_header(ck_pt.regret_path, regret_header, regret_sum);
+    write_matrix_and_header(paths.regret_path, regret_header, regret_sum);
 
 
     MatrixHeader strategy_header{
@@ -62,7 +62,7 @@ void InfoSets::write_check_point(const ISetsCkpt& ck_pt){
         .is_signed = true,
         .is_float = true
     };
-    write_matrix_and_header(ck_pt.strategy_path, strategy_header, strategy_sum);
+    write_matrix_and_header(paths.strategy_path, strategy_header, strategy_sum);
 
     MatrixHeader offset_header{
         .num_rows = offsets.size(),
@@ -71,7 +71,7 @@ void InfoSets::write_check_point(const ISetsCkpt& ck_pt){
         .is_signed = false,
         .is_float = false
     };
-    write_matrix_and_header(ck_pt.offset_path, offset_header, offsets);
+    write_matrix_and_header(paths.offset_path, offset_header, offsets);
 
     MatrixHeader iter_info_header{
         .num_rows = 2,
@@ -81,7 +81,7 @@ void InfoSets::write_check_point(const ISetsCkpt& ck_pt){
         .is_float = false
     };
     std::vector<int> temp_vec = {last_discount_iter, cur_iter};
-    write_matrix_and_header(ck_pt.iter_info_path, iter_info_header, temp_vec);
+    write_matrix_and_header(paths.iter_info_path, iter_info_header, temp_vec);
 }
 
 void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas) {
