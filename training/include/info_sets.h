@@ -12,7 +12,7 @@ struct ISetsPaths{
     std::string regret_path;
     std::string strategy_path;
     std::string offset_path;
-    std::string iter_info_path;
+    std::string iters_path;
 };
 
 struct InfoKey {
@@ -39,7 +39,7 @@ public:
 
     explicit InfoSets(const ISetsPaths& paths);
 
-    void write_check_point(const ISetsPaths& paths);
+    void write_ckpt(const ISetsPaths& paths) const;
 
     void update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas);
 

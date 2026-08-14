@@ -29,8 +29,8 @@ InfoSets::InfoSets(const ActionTree& action_tree, const std::vector<size_t>& clu
 
 InfoSets::InfoSets(const ISetsPaths& paths) {
 
-    auto [iter_info, temp_header] = load_matrix_and_header<int>(paths.iter_info_path);
-    if (iter_info.size() != 2) throw std::runtime_error("The iter_info vector should have size 1");
+    auto [iter_info, temp_header] = load_matrix_and_header<int>(paths.iters_path);
+    if (iter_info.size() != 2) throw std::runtime_error("The iter_info vector should have size 2");
     last_discount_iter = iter_info[0]; cur_iter = iter_info[1];
 
     auto [loaded_regret, regret_header] = load_matrix_and_header<double>(paths.regret_path);
@@ -43,7 +43,7 @@ InfoSets::InfoSets(const ISetsPaths& paths) {
     offsets = std::move(loaded_offsets);
 }
 
-void InfoSets::write_check_point(const ISetsPaths& paths){
+void InfoSets::write_ckpt(const ISetsPaths& paths) const{
 
     MatrixHeader regret_header{
         .num_rows = regret_sum.size(),
@@ -81,7 +81,7 @@ void InfoSets::write_check_point(const ISetsPaths& paths){
         .is_float = false
     };
     std::vector<int> temp_vec = {last_discount_iter, cur_iter};
-    write_matrix_and_header(paths.iter_info_path, iter_info_header, temp_vec);
+    write_matrix_and_header(paths.iters_path, iter_info_header, temp_vec);
 }
 
 void InfoSets::update_regret(const InfoKey& ikey, const std::vector<double>& action_deltas) {

@@ -3,33 +3,18 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <unordered_map>
 #include <fstream>
 #include <chrono>
 
 #include "card_buckets.h"
 #include "cfr.h"
-#include "game_state.h"
 #include "info_sets.h"
 #include "action_tree.h"
 #include "trainer.h"
 
 namespace fs = std::filesystem;
 
-static std::string fmt_iters(int n) {
-
-    int b = 1'000'000'000; 
-    int m = 1'000'000;
-    int k = 1'00;
-
-    if (n % b == 0 && n >= b) return std::to_string(n / b) + "B";
-    if (n % m == 0 && n >= m) return std::to_string(n / m) + "M";
-    if (n % k == 0 && n >= k) return std::to_string(n / 1'000) + "k";
-
-    return std::to_string(n);
-}
-
-CFR load_ckpt(CFRSpec spec) {
+CFR load_spec(CFRSpec spec) {
     CardBuckets buckets{spec.bucket_paths};
     ActionTree action_tree{GameState{}, spec.bet_sizes};
 
@@ -39,6 +24,28 @@ CFR load_ckpt(CFRSpec spec) {
     }
 
     return CFR{std::move(buckets), std::move(action_tree)};
+}
+
+void set_up_directories(const LogParams& lp) {
+    std::vector<fs::path> paths;
+
+    if (lp.preflop_path) paths.push_back(*lp.preflop_path);
+    if (lp.isets_paths) {
+        paths.push_back(lp.isets_paths->regret_path);
+        paths.push_back(lp.isets_paths->strategy_path);
+        paths.push_back(lp.isets_paths->offset_path);
+        paths.push_back(lp.isets_paths->iters_path);
+    }
+
+    for (const auto& path : paths) {
+        if (fs::exists(path))
+            throw std::runtime_error("Cannot write to " + path.string() +" since the path already exists");
+    }
+
+    for (const auto& path : paths) {
+        if (path.has_parent_path())
+            fs::create_directories(path.parent_path());
+    }
 }
 
 //clauded need to do more carefully
@@ -81,37 +88,25 @@ void write_preflop_csv(const std::string& path, const CFR& cfr) {
     for (uint8_t hi = 1; hi < rank.size(); ++hi)
         for (uint8_t lo = 0; lo < hi; ++lo) {
             const std::string base = rank[hi] + rank[lo];
-            //suited
-            record(base + "s", make_card(hi, 0), make_card(lo, 0));
-            //offsuit
-            record(base + "o", make_card(hi, 0), make_card(lo, 1));
+            record(base + "s", make_card(hi, 0), make_card(lo, 0)); //suited
+            record(base + "o", make_card(hi, 0), make_card(lo, 1)); //offsuit
         }
 
     if (!out) throw std::runtime_error("write failed: " + path);
 }
 
+void run_training(const CFRSpec& spec, const TrainParams& tp, const LogParams& lp){
 
-std::pair<fs::path, fs::path> set_up_directories(const LogParams& log_params) {
+    set_up_directories(lp);
+    CFR cfr = load_spec(spec);
+    cfr.train(tp.train_iters, tp.iters_per_discount);
 
-    fs::path run_root = log_params.folder / log_params.run_name;
-    fs::path preflop_path = run_root / "preflop";
-    fs::path infosets_path = run_root / "infosets";
+    if (lp.preflop_path){
+        write_preflop_csv(*lp.preflop_path, cfr);
+    }
 
-    if (fs::exists(run_root))
-        throw std::runtime_error("run folder already exists: " + run_root.string());
-
-    if (!log_params.preflop_ckpts.empty())
-        fs::create_directories(preflop_path);
-
-}
-
-
-void run_training(CFRSpec spec, const LogParams& log_params, int iters_per_discount){
-
-    set_up_directories(log_params);
-    CFR cfr = load_cfr(spec);
-
-    int cur_iter = 0;
-
-    //finish this loading function!
+    if (lp.isets_paths){
+        const InfoSets& isets = cfr.get_infosets();
+        isets.write_ckpt(*lp.isets_paths);
+    }
 }
