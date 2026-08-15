@@ -5,12 +5,14 @@
 #include <string>
 #include <fstream>
 #include <chrono>
+#include <toml.hpp>
+
 
 #include "card_buckets.h"
 #include "cfr.h"
 #include "info_sets.h"
 #include "action_tree.h"
-#include "training.h"
+#include "pipeline.h"
 
 namespace fs = std::filesystem;
 
@@ -127,4 +129,61 @@ void run_training(const CFRSpec& spec, const TrainParams& tp, LogParams& lp){
         const InfoSets& isets = cfr.get_infosets();
         isets.write_ckpt(*lp.isets_paths);
     }
+}
+
+/// ---------------------------- TOML Setup Code! ------------------------------------
+
+static std::vector<float> toml_float_vec(const toml::array& a) {
+    std::vector<float> out;
+    for (const toml::node& v : a) out.push_back(v.value<float>().value());
+    return out;
+}
+
+Config load_config(const fs::path& cfg_path, const fs::path& root) {
+    toml::table t = toml::parse_file(cfg_path.string());
+    Config c;
+
+    c.train.train_iters = t["train"]["train_iters"].value<size_t>().value();
+    c.train.iters_per_discount = t["train"]["iters_per_discount"].value<size_t>().value();
+    c.train.num_threads = t["train"]["num_threads"].value<size_t>().value();
+    c.train.omp_chunk_sz = t["train"]["omp_chunk_sz"].value<size_t>().value();
+    c.train.base_seed= t["train"]["base_seed"].value<uint32_t>().value();
+
+    c.spec.bucket_paths = {
+        .flop_path  = root/t["buckets"]["flop"].value<std::string>().value(),
+        .turn_path  = root/t["buckets"]["turn"].value<std::string>().value(),
+        .river_path = root/t["buckets"]["river"].value<std::string>().value()
+    };
+
+    c.spec.bet_sizes = {
+        toml_float_vec(*t["bet_sizes"]["preflop"].as_array()),
+        toml_float_vec(*t["bet_sizes"]["flop"].as_array()),
+        toml_float_vec(*t["bet_sizes"]["turn"].as_array()),
+        toml_float_vec(*t["bet_sizes"]["river"].as_array())
+    };
+
+    if (t["load_isets"]["enabled"].value_or(false)) {
+        c.spec.isets_paths = ISetsPaths{
+            .regret_path = (root/t["load_isets"]["regret"].value<std::string>().value()).string(),
+            .strategy_path = (root/t["load_isets"]["strategy"].value<std::string>().value()).string(),
+            .offset_path = (root/t["load_isets"]["offset"].value<std::string>().value()).string(),
+            .iters_path = (root/t["load_isets"]["iters"].value<std::string>().value()).string()
+        };
+    }
+
+    if (t["save_isets"]["enabled"].value_or(false)) {
+        c.log.isets_paths = ISetsPaths{
+            .regret_path = (root/t["save_isets"]["regret"].value<std::string>().value()).string(),
+            .strategy_path = (root/t["save_isets"]["strategy"].value<std::string>().value()).string(),
+            .offset_path = (root/t["save_isets"]["offset"].value<std::string>().value()).string(),
+            .iters_path = (root/t["save_isets"]["iters"].value<std::string>().value()).string()
+        };
+    }
+    c.log.overwrite_isets = t["save_isets"]["overwrite"].value_or(false);
+
+    if (t["save_preflop"]["enabled"].value_or(false)) {
+        c.log.preflop_path = root / t["save_preflop"]["path"].value<std::string>().value();
+    }
+    c.log.overwrite_preflop = t["save_preflop"]["overwrite"].value_or(false);
+    return c;
 }
