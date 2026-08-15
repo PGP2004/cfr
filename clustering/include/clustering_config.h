@@ -2,6 +2,7 @@
 #include <cstdint>  
 #include <cstddef> 
 #include <filesystem>  
+#include <toml.hpp>
 // stages.h
 struct Artifacts {
     std::filesystem::path river_strengths;
@@ -19,7 +20,7 @@ struct Artifacts {
     std::filesystem::path flop_ev_sdev;
 };
 
-struct PipelineConfig {
+struct ClusteringConfig {
     Artifacts art;
 
     size_t river_clusters;
@@ -36,13 +37,15 @@ struct PipelineConfig {
     uint32_t seed;
 };
 
-void run_river_strengths(const PipelineConfig& cfg);
-void run_river_clusters(const PipelineConfig& cfg);
+ClusteringConfig load_config(const std::filesystem::path& cfg_path, const std::filesystem::path& root);
 
-void run_turn_cdfs(const PipelineConfig& cfg);
-void run_turn_clusters(const PipelineConfig& cfg);
-void run_turn_distance_matrix(const PipelineConfig& cfg);
+void run_river_strengths(const ClusteringConfig& cfg);
+void run_river_clusters(const ClusteringConfig& cfg);
 
-void run_flop_multisets(const PipelineConfig& cfg);
-void run_flop_clusters(const PipelineConfig& cfg);
-void run_flop_ev_sdev(const PipelineConfig& cfg);
+void run_turn_cdfs(const ClusteringConfig& cfg);
+void run_turn_clusters(const ClusteringConfig& cfg);
+void run_turn_distance_matrix(const ClusteringConfig& cfg);
+
+void run_flop_multisets(const ClusteringConfig& cfg);
+void run_flop_clusters(const ClusteringConfig& cfg);
+void run_flop_ev_sdev(const ClusteringConfig& cfg);

@@ -1,13 +1,15 @@
-#include "pipeline.h"
-#include "indexer.h"
+#include "clustering_config.h"
 #include "matrix_loader.h"
+#include "L1_k_means.h"
 #include "evaluator.h"
+#include "indexer.h"
 
-#include <array>
-#include <string>
-#include <fstream>
-#include <iostream>
+#include <cstdint>
 #include <filesystem>
+#include <iostream>
+#include <random>
+#include <stdexcept>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -47,7 +49,7 @@ int get_strength(std::array<uint8_t, 7>& board) {
     return strength;
 }
 
-void run_river_strengths(const PipelineConfig& cfg) {
+void run_river_strengths(const ClusteringConfig& cfg) {
     if (fs::exists(cfg.art.river_strengths)){
         throw std::runtime_error("write path already exists: " + cfg.art.river_strengths.string());
     }
@@ -79,4 +81,44 @@ void run_river_strengths(const PipelineConfig& cfg) {
     }
 
     if (!out) throw std::runtime_error("write failed partway through: " + cfg.art.river_strengths.string());
+}
+
+
+void run_river_clusters(const ClusteringConfig& cfg) {
+    if (fs::exists(cfg.art.river_centers))
+        throw std::runtime_error("write path already exists: " + cfg.art.river_centers.string());
+    if (fs::exists(cfg.art.river_assignments))
+        throw std::runtime_error("write path already exists: " + cfg.art.river_assignments.string());
+    
+    auto [strengths, strength_header] = load_matrix_and_header<int>(cfg.art.river_strengths.string());
+
+    L1::ClusteringParams params{
+        .num_clusters = cfg.river_clusters,
+        .num_pts = static_cast<size_t>(strength_header.num_rows),
+        .dim = 1,
+        .max_iters = cfg.river_max_iters,
+        .rng = std::mt19937{cfg.seed},
+    };
+
+    auto [assignments, centers] = L1::l1_k_means(params, strengths);
+
+    MatrixHeader center_header{
+        .num_rows = cfg.river_clusters, 
+        .num_cols = 1,
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false
+    };
+
+    write_matrix_and_header<int>(cfg.art.river_centers.string(), center_header, centers);
+
+    MatrixHeader assignment_header{
+        .num_rows = static_cast<uint64_t>(assignments.size()),
+        .num_cols = 1, 
+        .bytes_per_elt = sizeof(int),
+        .is_signed = true,
+        .is_float = false,
+    };
+
+    write_matrix_and_header<int>(cfg.art.river_assignments.string(), assignment_header, assignments);
 }

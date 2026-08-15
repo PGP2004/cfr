@@ -1,46 +1,45 @@
-CXX := $(shell ls /opt/homebrew/bin/g++-* 2>/dev/null | sort -V | tail -n1)
-ifeq ($(CXX),)
-CXX := g++
-endif
-
-CXXFLAGS := -std=c++20 -Wall -Wextra -O2 -fopenmp -MMD -MP
-CXXFLAGS += -Ik_means/include -Ipipeline/include
-
-BUILD_DIR := build
-OBJ_DIR   := $(BUILD_DIR)/obj
-BIN_DIR   := $(BUILD_DIR)/bin
-
-ISO_DIR := ../external/hand-isomorphism
-ISO_LIB := $(ISO_DIR)/libhand_index.a
-CXXFLAGS += -I$(ISO_DIR)/src
-
+CXX        := g++
 COMMON_DIR := ../common
-COMMON_LIB := $(COMMON_DIR)/libcommon.a
-CXXFLAGS += -I$(COMMON_DIR)/include
+ISO_DIR    := ../external/hand-isomorphism
+TOML_DIR   := ../external/tomlplusplus
+OMP_PREFIX := /opt/homebrew/opt/libomp
 
-TARGET := $(BIN_DIR)/clustering_script
+OPTFLAGS := -O2
+OMPFLAGS := -Xpreprocessor -fopenmp -I$(OMP_PREFIX)/include
 
-SRCS := $(wildcard k_means/src/*.cpp) $(wildcard pipeline/src/*.cpp)
-OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
+CXXFLAGS := -std=c++20 -Wall -Wextra -g $(OPTFLAGS) $(OMPFLAGS) \
+    -Iinclude -I$(COMMON_DIR)/include -I$(ISO_DIR)/src -I$(TOML_DIR)
 
-.PHONY: all clean common
-all: $(TARGET)
+LDFLAGS := -L$(ISO_DIR) -lhand_index \
+    -L$(OMP_PREFIX)/lib -lomp -Wl,-rpath,$(OMP_PREFIX)/lib
 
-$(TARGET): $(OBJS) $(COMMON_LIB) $(ISO_LIB) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $^ -lm -o $@
+TARGET   := main
+SRCDIR   := src
+BUILDDIR := build
+OBJDIR   := $(BUILDDIR)/obj
+BINDIR   := $(BUILDDIR)/bin
 
-$(OBJ_DIR)/%.o: %.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+SRCS := $(wildcard $(SRCDIR)/*.cpp)
+OBJS := $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
+COMMON_SRCS := $(wildcard $(COMMON_DIR)/src/*.cpp)
+COMMON_OBJS := $(patsubst $(COMMON_DIR)/src/%.cpp,$(OBJDIR)/common_%.o,$(COMMON_SRCS))
+DEPS := $(OBJS:.o=.d) $(COMMON_OBJS:.o=.d)
 
-$(COMMON_LIB): common
-common:
-	$(MAKE) -C $(COMMON_DIR)
+$(BINDIR)/$(TARGET): $(OBJS) $(COMMON_OBJS) | $(BINDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(COMMON_OBJS) $(LDFLAGS)
 
-$(BIN_DIR):
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+$(OBJDIR)/common_%.o: $(COMMON_DIR)/src/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+$(OBJDIR) $(BINDIR):
 	mkdir -p $@
 
--include $(OBJS:.o=.d)
-
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILDDIR)
+
+-include $(DEPS)
+
+.PHONY: clean

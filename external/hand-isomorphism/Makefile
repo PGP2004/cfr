@@ -5,7 +5,7 @@
 #
 # see README.md and LICENSE.txt for more details.
 #
-CFLAGS     ?=-std=c99 -Wall -g -O2
+CFLAGS     ?=-std=c99 -Wall -g -O3
 LDLIBS     ?=-lm
 SRC        :=$(addprefix src/,deck.c hand_index.c)
 OBJ        :=$(SRC:.c=.o)

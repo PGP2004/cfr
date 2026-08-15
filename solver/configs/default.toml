@@ -1,8 +1,8 @@
 [train]
-train_iters = 100_000_000
-iters_per_discount = 10_000
+train_iters = 1_000_000
+iters_per_discount = 100_000
 num_threads = 8
-omp_chunk_sz = 128
+omp_chunk_sz = 64
 base_seed = 42
 
 [buckets]
@@ -21,7 +21,7 @@ iters = "data/runs/prev/iters.bin"
 # checkpoint to write at end of run
 [save_isets]
 enabled = true
-overwrite = false
+overwrite = true
 regret = "data/runs/current/regret.bin"
 strategy = "data/runs/current/strat.bin"
 offset = "data/runs/current/offsets.bin"
@@ -29,7 +29,7 @@ iters = "data/runs/current/iters.bin"
 
 [save_preflop]
 enabled = true
-overwrite = false
+overwrite = true
 path = "data/runs/current/preflop.csv"
 
 [bet_sizes]
