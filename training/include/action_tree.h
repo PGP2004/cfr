@@ -34,7 +34,6 @@ private:
 public:
 
     size_t root_idx;
-    size_t cur_idx;
     std::vector<TreeNode> nodes;
     std::vector<PublicState> pub_states;
 
@@ -43,28 +42,25 @@ public:
 
     ActionTree(const GameState& root_state, const std::vector<std::vector<float>>& bet_szs);
 
-    void apply_action(size_t action_idx){
-        if (action_idx >= nodes[cur_idx].child_idxs.size()){
+    size_t apply_action(size_t node_idx, size_t action_idx){
+        if (action_idx >= nodes[node_idx].child_idxs.size()){
             throw std::out_of_range("the idx is out of range");
         }
-        cur_idx = nodes[cur_idx].child_idxs[action_idx];
+        return nodes[node_idx].child_idxs[action_idx];
     }
 
-    void undo_action(){cur_idx = nodes[cur_idx].parent_idx;}
+    int active_player(size_t node_idx) const {return pub_states[node_idx].active_player;};
+    int num_children(size_t node_idx) const {return nodes[node_idx].child_idxs.size();};
 
-    int active_player() const {return pub_states[cur_idx].active_player;};
+    int street(size_t node_idx) const { return pub_states[node_idx].street_idx;};
 
-    int street() const { return pub_states[cur_idx].street_idx;};
+    bool is_terminal(size_t node_idx) const {return nodes[node_idx].child_idxs.size() == 0;}
 
-    bool is_terminal() const {return nodes[cur_idx].child_idxs.size() == 0;}
+    bool folded(size_t node_idx) const{return pub_states[node_idx].folded;}
 
-    bool folded() const{return pub_states[cur_idx].folded;}
+    bool is_root_node(size_t node_idx) const{return root_idx == node_idx;}
 
-    bool is_root_node() const{return root_idx == cur_idx;}
-
-    double get_payoff(int player) const{ return pub_states[cur_idx].payoffs[player];}
-
-    void restart() {cur_idx = root_idx;}
+    double get_payoff(size_t node_idx, int player) const{ return pub_states[node_idx].payoffs[player];}
 
     size_t depth() const;
 

@@ -1,6 +1,7 @@
 Study Stack:
 Read more about git - https://git-scm.com/book
 Callables - https://csiflabs.cs.ucdavis.edu/~tyfeng/ecs34/C++/callable.html
+Parallel Programming -  https://hpc.llnl.gov/documentation/tutorials/introduction-parallel-computing-tutorial
 
 
 TODO: 

@@ -126,7 +126,6 @@ ActionTree::ActionTree(const GameState& root_state, const std::vector<std::vecto
 
     std::mt19937 rng(0);
     root_idx = 0;
-    cur_idx  = 0;
 
     nodes.push_back(TreeNode{0, 0, {}});
     pub_states.push_back(get_public_state(root_state));

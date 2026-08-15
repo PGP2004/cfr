@@ -1,6 +1,8 @@
 #include "dealer.h"
 #include "indexer.h"      
 #include "evaluator.h"  
+
+#include <utility>
 #include <array>
 #include <cstdint>
 #include <stdexcept>
@@ -10,14 +12,8 @@
 using hands_t = std::array<std::array<uint8_t, 7>, 2>;
 using hand_ids_t = std::array<std::array<int, 4>, 2>;
 
-static void write_hands(std::mt19937& rng, hands_t& hands) {
+static void write_hands(std::mt19937& rng, hands_t& hands, std::array<uint8_t,52>& deck) {
     //fisher yates for the first 9 cards
-
-    static std::array<uint8_t, 52> deck = [] {
-        std::array<uint8_t, 52> d; 
-        for (int i = 0; i < 52; ++i) d[i] = i;
-        return d;
-    }();
 
     for (int i = 0; i < 9; ++i) {
         std::uniform_int_distribution<int> dist(i, 51);
@@ -77,32 +73,35 @@ static int get_winner(hands_t& hands) {
 }
 
 void Dealer::deal(std::mt19937& rng){
-    write_hands(rng, hands);
+    write_hands(rng, hands, deck);
     write_hand_ids(hands, hand_ids);
     winner = get_winner(hands);
 }
 
-double Dealer::get_reward(int player, const ActionTree& at){
+double Dealer::get_reward(size_t node_idx, int player, const ActionTree& at){
 
-    if (!at.is_terminal()){
+    if (!at.is_terminal(node_idx)){
         throw std::runtime_error("cannot get reward for non-terminal node");
     }
 
     int opp = 1 - player;
 
     //if someone folded in the game
-    if (at.folded()){
-        bool won = (player == at.active_player());
-        if (won) return at.get_payoff(player);
-        return -at.get_payoff(opp);
+    if (at.folded(node_idx)){
+        bool won = (player == at.active_player(node_idx));
+        if (won) return at.get_payoff(node_idx , player);
+        return -at.get_payoff(node_idx, opp);
     }
 
     // if no one folded in the game.
     if (winner == -1) return 0.0;
-    else if (winner == player) return at.get_payoff(player);
-    else if (winner == opp) return - at.get_payoff(opp);
+    else if (winner == player) return at.get_payoff(node_idx, player);
+    else if (winner == opp) return - at.get_payoff(node_idx, opp);
 
     throw std::runtime_error("Should not be able to get here");
     return 0.0;
 }
 
+Dealer::Dealer(){
+    for (int i = 0; i < 52; ++i) deck[i] = i; 
+}

@@ -2,9 +2,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <unordered_map>
 #include <fstream>
-#include <chrono>
 
 #include "cfr.h"
 #include "game_state.h"
@@ -27,9 +25,19 @@ void run_and_time(char** argv){
         .train_iters = 1'000,
         .iters_per_discount = 10'000
     };
+    
+    ISetsPaths save_isets_paths{
+        .regret_path = runs_path / "regret.bin",
+        .strategy_path = runs_path / "strat.bin",
+        .offset_path = runs_path / "offsets.bin",
+        .iters_path = runs_path / "iters.bin"
+    };
 
     LogParams log_params{
-        .preflop_path = (runs_path / "preflops" / "test_preflop.csv")
+        .preflop_path = (runs_path / "test_preflop.csv"),
+        .overwrite_preflop = true,
+        .isets_paths = save_isets_paths,
+        .overwrite_isets = true,
     };
 
     BucketPaths bucket_paths{

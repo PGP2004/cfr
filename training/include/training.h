@@ -1,5 +1,3 @@
-#include <exception>
-#include <filesystem>
 #include <iostream>
 #include <string>
 #include <filesystem> 
@@ -11,13 +9,19 @@
 namespace fs = std::filesystem;
 
 struct TrainParams {            
-    int train_iters;
-    int iters_per_discount;
+    size_t train_iters;
+    size_t iters_per_discount;
+    size_t num_threads;
+    size_t omp_chunk_sz;
+    uint32_t base_seed;
+
 };
 
 struct LogParams{
     std::optional<fs::path> preflop_path;
     std::optional<ISetsPaths> isets_paths;
+    bool overwrite_isets = false; //gives permission to overwrite isets
+    bool overwrite_preflop = false; //gives permission to overwrite preflops
 };
 
 struct CFRSpec{

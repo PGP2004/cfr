@@ -10,7 +10,7 @@
 #include "cfr.h"
 #include "info_sets.h"
 #include "action_tree.h"
-#include "trainer.h"
+#include "training.h"
 
 namespace fs = std::filesystem;
 
@@ -29,17 +29,30 @@ CFR load_spec(CFRSpec spec) {
 void set_up_directories(const LogParams& lp) {
     std::vector<fs::path> paths;
 
-    if (lp.preflop_path) paths.push_back(*lp.preflop_path);
-    if (lp.isets_paths) {
-        paths.push_back(lp.isets_paths->regret_path);
-        paths.push_back(lp.isets_paths->strategy_path);
-        paths.push_back(lp.isets_paths->offset_path);
-        paths.push_back(lp.isets_paths->iters_path);
+    if (lp.preflop_path){
+
+        fs::path p = *lp.preflop_path;
+        if (!lp.overwrite_preflop && fs::exists(p)){
+            throw std::runtime_error("Cannot write to " + p.string() +" since the path already exists");
+        }
+
+        if (p.has_parent_path()) fs::create_directories(p.parent_path());
     }
 
-    for (const auto& path : paths) {
-        if (fs::exists(path))
-            throw std::runtime_error("Cannot write to " + path.string() +" since the path already exists");
+    if (! lp.isets_paths) return;
+
+    std::vector<fs::path> from_isets;
+    from_isets.push_back(lp.isets_paths->regret_path);
+    from_isets.push_back(lp.isets_paths->strategy_path);
+    from_isets.push_back(lp.isets_paths->offset_path);
+    from_isets.push_back(lp.isets_paths->iters_path);
+
+    if (!lp.overwrite_isets){
+        for (const auto& p : from_isets) {
+            if (fs::exists(p)){
+                throw std::runtime_error("Cannot write to " + p.string() +" since the path already exists");
+            }
+        }
     }
 
     for (const auto& path : paths) {
@@ -99,7 +112,9 @@ void run_training(const CFRSpec& spec, const TrainParams& tp, const LogParams& l
 
     set_up_directories(lp);
     CFR cfr = load_spec(spec);
-    cfr.train(tp.train_iters, tp.iters_per_discount);
+
+    cfr.train(tp.train_iters, tp.iters_per_discount, 
+        tp.num_threads, tp.omp_chunk_sz, tp.base_seed);
 
     if (lp.preflop_path){
         write_preflop_csv(*lp.preflop_path, cfr);
