@@ -7,6 +7,9 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 void cdfs_to_pdfs(size_t num_centers, size_t num_buckets, std::vector<int>& cdfs) {
     //write over the cdfs to get pdfs;
@@ -57,6 +60,10 @@ std::pair<int, int> get_ev_and_sdev(size_t num_buckets, std::vector<int>& multis
 }
 
 void run_flop_ev_sdev(const PipelineConfig& cfg) {
+
+    if (fs::exists(cfg.art.flop_ev_sdev))
+        throw std::runtime_error("write path already exists: " + cfg.art.flop_ev_sdev.string());
+        
     const size_t num_centers = cfg.turn_clusters;
     const size_t num_buckets = cfg.turn_buckets;
 

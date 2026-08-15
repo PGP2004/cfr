@@ -8,6 +8,14 @@
 using namespace std;
 
 void run_flop_clusters(const PipelineConfig& cfg) {
+
+    if (fs::exists(cfg.art.flop_ctrs_wts))
+        throw std::runtime_error("write path already exists: " + cfg.art.flop_ctrs_wts.string());
+    if (fs::exists(cfg.art.flop_ctrs_verts))
+        throw std::runtime_error("write path already exists: " + cfg.art.flop_ctrs_verts.string());
+    if (fs::exists(cfg.art.flop_assignments))
+        throw std::runtime_error("write path already exists: " + cfg.art.flop_assignments.string());
+        
     auto [multisets, multisets_header] = load_matrix_and_header<int>(cfg.art.flop_multisets.string());
     auto [dist_matrix, dist_header] = load_matrix_and_header<int>(cfg.art.turn_distance_matrix.string());
 

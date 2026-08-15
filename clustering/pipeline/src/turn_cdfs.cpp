@@ -53,6 +53,9 @@ void get_strength_cdf(const std::array<uint8_t, 6>& cards, uint8_t num_buckets,
 
 void run_turn_cdfs(const PipelineConfig& cfg) {
 
+    if (fs::exists(cfg.art.turn_cdfs))
+        throw std::runtime_error("write path already exists: " + cfg.art.turn_cdfs.string());
+
     auto [strengths, river_header] = load_matrix_and_header<int>(cfg.art.river_strengths.string());
 
     std::array<uint8_t, 2> river_cpr = {2, 5};

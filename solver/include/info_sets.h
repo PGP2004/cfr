@@ -15,7 +15,7 @@ struct ISetsPaths{
     std::string offset_path;
     std::string iters_path;
 
-    void remove() {
+    void remove() const {
         std::filesystem::remove(regret_path);
         std::filesystem::remove(strategy_path);
         std::filesystem::remove(offset_path);

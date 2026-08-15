@@ -7,12 +7,11 @@
 #include <chrono>
 #include <toml.hpp>
 
-
 #include "card_buckets.h"
 #include "cfr.h"
 #include "info_sets.h"
 #include "action_tree.h"
-#include "pipeline.h"
+#include "training.h"
 
 namespace fs = std::filesystem;
 
@@ -29,7 +28,6 @@ CFR load_spec(CFRSpec spec) {
 }
 
 void set_up_directories(const LogParams& lp) {
-    std::vector<fs::path> paths;
 
     if (lp.preflop_path){
 
@@ -110,7 +108,7 @@ void write_preflop_csv(const std::string& path, const CFR& cfr) {
     if (!out) throw std::runtime_error("write failed: " + path);
 }
 
-void run_training(const CFRSpec& spec, const TrainParams& tp, LogParams& lp){
+void run_training(const CFRSpec& spec, const TrainParams& tp, const LogParams& lp){
 
     set_up_directories(lp);
     CFR cfr = load_spec(spec);

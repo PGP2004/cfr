@@ -1,5 +1,5 @@
 [train]
-train_iters = 10_000_000
+train_iters = 100_000_000
 iters_per_discount = 10_000
 num_threads = 8
 omp_chunk_sz = 128

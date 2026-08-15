@@ -113,11 +113,6 @@ inline void write_matrix_and_header(const std::string& write_path, MatrixHeader 
 
     //check against the header and throw an error if something goes wrong
     header_type_check<T>(header);
-
-    if (std::filesystem::exists(write_path)){
-        throw std::runtime_error("write path already exists");
-    }
-
     uint64_t expected_num_elts = header.num_rows * header.num_cols;
 
     if (expected_num_elts != static_cast<uint64_t>(results.size())){
