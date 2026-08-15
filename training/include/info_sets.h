@@ -3,6 +3,7 @@
 #include "action.h"
 #include "action_tree.h"
 
+#include <filesystem>
 #include <vector>
 #include <string>
 #include <utility>
@@ -13,6 +14,13 @@ struct ISetsPaths{
     std::string strategy_path;
     std::string offset_path;
     std::string iters_path;
+
+    void remove() {
+        std::filesystem::remove(regret_path);
+        std::filesystem::remove(strategy_path);
+        std::filesystem::remove(offset_path);
+        std::filesystem::remove(iters_path);
+    };
 };
 
 struct InfoKey {

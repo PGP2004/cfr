@@ -11,9 +11,9 @@ namespace fs = std::filesystem;
 struct TrainParams {            
     size_t train_iters;
     size_t iters_per_discount;
-    size_t num_threads;
-    size_t omp_chunk_sz;
-    uint32_t base_seed;
+    size_t num_threads = 1;
+    size_t omp_chunk_sz = 64 ;
+    uint32_t base_seed = 0;
 
 };
 
@@ -32,4 +32,4 @@ struct CFRSpec{
 
 CFR load_spec(CFRSpec spec);
 void write_preflop_csv(const std::string& path, const CFR& cfr);
-void run_training(const CFRSpec& spec, const TrainParams& tp, const LogParams& lp);
+void run_training(const CFRSpec& spec, const TrainParams& tp, LogParams& lp);

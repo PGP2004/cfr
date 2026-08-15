@@ -55,9 +55,9 @@ void set_up_directories(const LogParams& lp) {
         }
     }
 
-    for (const auto& path : paths) {
-        if (path.has_parent_path())
-            fs::create_directories(path.parent_path());
+    for (const auto& p : from_isets) {
+        if (p.has_parent_path())
+            fs::create_directories(p.parent_path());
     }
 }
 
@@ -108,7 +108,7 @@ void write_preflop_csv(const std::string& path, const CFR& cfr) {
     if (!out) throw std::runtime_error("write failed: " + path);
 }
 
-void run_training(const CFRSpec& spec, const TrainParams& tp, const LogParams& lp){
+void run_training(const CFRSpec& spec, const TrainParams& tp, LogParams& lp){
 
     set_up_directories(lp);
     CFR cfr = load_spec(spec);
@@ -117,10 +117,13 @@ void run_training(const CFRSpec& spec, const TrainParams& tp, const LogParams& l
         tp.num_threads, tp.omp_chunk_sz, tp.base_seed);
 
     if (lp.preflop_path){
+
+        if (lp.overwrite_preflop)fs::remove(*lp.preflop_path);
         write_preflop_csv(*lp.preflop_path, cfr);
     }
 
     if (lp.isets_paths){
+        if (lp.overwrite_isets) (*lp.isets_paths).remove();
         const InfoSets& isets = cfr.get_infosets();
         isets.write_ckpt(*lp.isets_paths);
     }

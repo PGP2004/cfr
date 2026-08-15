@@ -33,12 +33,14 @@ void run_and_time(char** argv){
         .iters_path = runs_path / "iters.bin"
     };
 
-    LogParams log_params{
-        .preflop_path = (runs_path / "test_preflop.csv"),
-        .overwrite_preflop = true,
-        .isets_paths = save_isets_paths,
-        .overwrite_isets = true,
-    };
+    // LogParams log_params{
+    //     .preflop_path = (runs_path / "test_preflop.csv"),
+    //     .overwrite_preflop = true,
+    //     .isets_paths = save_isets_paths,
+    //     .overwrite_isets = true,
+    // };
+
+    LogParams log_params{};
 
     BucketPaths bucket_paths{
         .flop_path = buckets_path / "flop_assignments",
