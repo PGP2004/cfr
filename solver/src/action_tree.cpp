@@ -3,7 +3,7 @@
 #include <iostream>
 #include <unordered_set>
 #include "action_tree.h"
-#include "game_state.h"
+#include "poker_state.h"
 
 int ActionTree::raise_to_x_pot(double x, int me, int pot,
     std::array<int,2> pips, std::array<int,2> stacks) const {
@@ -26,7 +26,7 @@ int ActionTree::raise_to_x_pot(double x, int me, int pot,
     return raise_to;
 }
 
-std::vector<Action> ActionTree::get_actions(const GameState& state){
+std::vector<Action> ActionTree::get_actions(const PokerState& state){
     int pot = state.get_pot();
     int player = state.get_active_player();
     const std::array<int, 2> pips = state.get_pips();
@@ -54,7 +54,7 @@ std::vector<Action> ActionTree::get_actions(const GameState& state){
     return output;
 }
 
-std::vector<Action> ActionTree::get_legal_actions(const GameState& state){
+std::vector<Action> ActionTree::get_legal_actions(const PokerState& state){
     std::vector<Action> legal_actions;
 
     for (const Action& cand : get_actions(state)) {
@@ -64,7 +64,7 @@ std::vector<Action> ActionTree::get_legal_actions(const GameState& state){
     return legal_actions;
 }
 
-PublicState ActionTree::get_public_state(const GameState& state){
+PublicState ActionTree::get_public_state(const PokerState& state){
 
     PublicState pub_state{
         .street_idx = state.get_street(),
@@ -121,7 +121,7 @@ size_t ActionTree::depth() const {
     return max_depth;
 }
 
-ActionTree::ActionTree(const GameState& root_state, const std::vector<std::vector<float>>& bet_szs):
+ActionTree::ActionTree(const PokerState& root_state, const std::vector<std::vector<float>>& bet_szs):
     bet_sizes(bet_szs){
 
     std::mt19937 rng(0);
@@ -130,7 +130,7 @@ ActionTree::ActionTree(const GameState& root_state, const std::vector<std::vecto
     nodes.push_back(TreeNode{0, 0, {}});
     pub_states.push_back(get_public_state(root_state));
 
-    std::vector<std::pair<GameState, size_t>> stack;  // (state, node idx)
+    std::vector<std::pair<PokerState, size_t>> stack;  // (state, node idx)
     stack.push_back({root_state, root_idx});
 
     while (!stack.empty()) {
@@ -140,7 +140,7 @@ ActionTree::ActionTree(const GameState& root_state, const std::vector<std::vecto
         if (state.is_terminal_node()) continue;
 
         if (state.is_chance_node()) {
-            GameState post_chance = state.apply_chance(rng);
+            PokerState post_chance = state.apply_chance();
             pub_states[node_idx] = get_public_state(post_chance);
             stack.push_back({std::move(post_chance), node_idx});
             continue;
@@ -148,7 +148,7 @@ ActionTree::ActionTree(const GameState& root_state, const std::vector<std::vecto
 
         for (const Action& action : get_legal_actions(state)) {
 
-            GameState child = state.apply_action(action);
+            PokerState child = state.apply_action(action);
             size_t child_idx = nodes.size();
 
             nodes[node_idx].child_idxs.push_back(child_idx);

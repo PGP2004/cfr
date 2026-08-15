@@ -1,5 +1,5 @@
 #pragma once
-#include "game_state.h"
+#include "poker_state.h"
 #include <random>
 #include <vector>
 #include <cstddef>
@@ -26,10 +26,10 @@ private:
     int raise_to_x_pot(double x, int player, int pot,
         std::array<int,2> pips, std::array<int,2> stacks) const;
 
-    std::vector<Action> get_actions(const GameState& state);
-    std::vector<Action> get_legal_actions(const GameState& state);
+    std::vector<Action> get_actions(const PokerState& state);
+    std::vector<Action> get_legal_actions(const PokerState& state);
 
-    PublicState get_public_state(const GameState& state);
+    PublicState get_public_state(const PokerState& state);
     
 public:
 
@@ -40,7 +40,7 @@ public:
     //array of bet sizes per street with bet sizes encoded as floats where (0.333 = 1/3 pot bet)
     std::vector<std::vector<float>> bet_sizes; 
 
-    ActionTree(const GameState& root_state, const std::vector<std::vector<float>>& bet_szs);
+    ActionTree(const PokerState& root_state, const std::vector<std::vector<float>>& bet_szs);
 
     size_t apply_action(size_t node_idx, size_t action_idx){
         if (action_idx >= nodes[node_idx].child_idxs.size()){

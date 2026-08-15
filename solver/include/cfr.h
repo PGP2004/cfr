@@ -7,7 +7,7 @@
 #include <omp.h>
 
 #include "action.h"
-#include "game_state.h"
+#include "poker_state.h"
 #include "card_buckets.h"
 
 #include "info_sets.h"

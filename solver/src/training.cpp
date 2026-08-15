@@ -17,7 +17,8 @@ namespace fs = std::filesystem;
 
 CFR load_spec(CFRSpec spec) {
     CardBuckets buckets{spec.bucket_paths};
-    ActionTree action_tree{GameState{}, spec.bet_sizes};
+    PokerState init_state{spec.starting_stack, spec.big_blind, spec.small_blind}; 
+    ActionTree action_tree{init_state, spec.bet_sizes};
 
     if (spec.isets_paths) {
         InfoSets isets{*spec.isets_paths};
@@ -152,6 +153,10 @@ Config load_config(const fs::path& cfg_path, const fs::path& root) {
         .turn_path  = root/t["buckets"]["turn"].value<std::string>().value(),
         .river_path = root/t["buckets"]["river"].value<std::string>().value()
     };
+
+    c.spec.starting_stack = t["game_values"]["starting_stacks"].value<int>().value();
+    c.spec.big_blind = t["game_values"]["big_blind"].value<int>().value();
+    c.spec.small_blind =  t["game_values"]["small_blind"].value<int>().value();
 
     c.spec.bet_sizes = {
         toml_float_vec(*t["bet_sizes"]["preflop"].as_array()),

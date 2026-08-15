@@ -8,12 +8,13 @@
 #include <string>
 #include <vector>
 
-class GameState {
+class PokerState {
 
 private:
 
-    static constexpr int starting_stack = 200;
-    std::array<std::array<uint8_t, 7>, 2> hands;
+    int starting_stack;
+    int big_blind;
+    int small_blind;
     std::array<int, 2> stacks;
     std::array<int, 2> pips;
 
@@ -24,15 +25,13 @@ private:
 
 public:
 
-    GameState();
+    PokerState(int stack, int bb, int sb);
 
-    GameState(const GameState&) = default;
+    PokerState(const PokerState&) = default;
 
-    GameState& operator=(const GameState&) = default;
+    PokerState apply_action(const Action& action);
 
-    GameState  apply_action(const Action& action);
-
-    GameState apply_chance(std::mt19937& rng);
+    PokerState apply_chance();
 
     bool is_legal_action(const Action& action) const;
 

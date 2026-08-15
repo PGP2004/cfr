@@ -1,9 +1,20 @@
+[game_values]
+starting_stacks = 200
+big_blind = 2
+small_blind = 1
+
+[bet_sizes]
+preflop = [0.5, 1.0]
+flop = [0.33, 0.75, 1.5]
+turn = [0.75, 1.5]
+river = [0.75, 1.25]
+
 [train]
-train_iters = 1_000_000
+train_iters = 10_000_000
 iters_per_discount = 100_000
 num_threads = 8
-omp_chunk_sz = 64
-base_seed = 42
+omp_chunk_sz = 256
+base_seed = 0
 
 [buckets]
 flop = "data/clustering/flop_assignments"
@@ -31,9 +42,3 @@ iters = "data/runs/current/iters.bin"
 enabled = true
 overwrite = true
 path = "data/runs/current/preflop.csv"
-
-[bet_sizes]
-preflop = [0.5, 1.0]
-flop = [0.33, 0.75, 1.5]
-turn = [0.75, 1.5]
-river = [0.75, 1.25]

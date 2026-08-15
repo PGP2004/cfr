@@ -26,6 +26,9 @@ struct CFRSpec{
     std::optional<ISetsPaths> isets_paths;
     BucketPaths bucket_paths;
     std::vector<std::vector<float>> bet_sizes;
+    int starting_stack;
+    int big_blind;
+    int small_blind;
 };
 
 CFR load_spec(CFRSpec spec);

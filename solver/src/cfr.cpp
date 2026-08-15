@@ -1,4 +1,3 @@
-#include "game_state.h"
 #include "info_sets.h"
 #include "card_buckets.h"
 #include "cfr.h"    
