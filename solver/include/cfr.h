@@ -42,6 +42,6 @@ class CFR {
         const ActionTree& get_action_tree()const {return action_tree;}
         const InfoSets& get_infosets()const {return infosets;}
 
-        std::pair<Action, size_t> sample_strategy(size_t at_idx, Dealer& d, std::mt19937 rng) const;
+        std::pair<Action, size_t> sample_strategy(size_t at_idx, Dealer& d, std::mt19937& rng) const;
 
     };

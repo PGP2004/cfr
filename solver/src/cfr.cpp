@@ -26,7 +26,7 @@ InfoKey CFR::get_InfoKey(size_t node_idx, const ActionTree& at, const Dealer& d)
     return {node_idx, (size_t)card_buckets.cluster_of(street, hand_id), num_children};
 }
 
-std::pair<Action, size_t> CFR::sample_strategy(size_t at_idx, Dealer& d, std::mt19937 rng) const{
+std::pair<Action, size_t> CFR::sample_strategy(size_t at_idx, Dealer& d, std::mt19937& rng) const{
     std::vector<double> strat_probs;
 
     InfoKey ikey = get_InfoKey(at_idx, action_tree, d);

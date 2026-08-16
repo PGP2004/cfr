@@ -22,11 +22,11 @@ turn = "data/clustering/turn_assignments"
 river = "data/clustering/river_assignments"
 
 [load_isets]
-enabled = false #if this is false does not load any checkpoint
-regret = "data/runs/1B_run/regret.bin"
-strategy = "data/runs/1B_run/strat.bin"
-offset = "data/runs/1B_run/prev/offsets.bin"
-iters = "data/runs/1B_run/prev/iters.bin"
+enabled = true #if this is false does not load any checkpoint
+regret = "data/runs/1B/regret.bin"
+strategy = "data/runs/1B/strat.bin"
+offset = "data/runs/1B/offsets.bin"
+iters = "data/runs/1B/iters.bin"
 
 # checkpoint to write at end of run
 [save_isets]
