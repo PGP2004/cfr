@@ -1,0 +1,29 @@
+[params]
+river_clusters = 50
+river_max_iters = 100
+
+turn_buckets = 20
+turn_clusters = 50
+turn_max_iters = 100
+
+flop_clusters = 50
+flop_max_iters = 40
+flop_center_support = 47
+
+seed = 42
+
+[artifacts]
+river_strengths = "data/clustering/river_strengths"
+river_centers = "data/clustering/river_centers"
+river_assignments = "data/clustering/river_assignments"
+
+turn_cdfs = "data/clustering/turn_cdfs"
+turn_cdf_centers = "data/clustering/turn_cdf_centers"
+turn_assignments = "data/clustering/turn_assignments"
+turn_distance_matrix = "data/clustering/turn_distance_matrix"
+
+flop_multisets = "data/clustering/flop_multisets"
+flop_ctrs_wts = "data/clustering/flop_ctrs_wts"
+flop_ctrs_verts = "data/clustering/flop_ctrs_verts"
+flop_assignments = "data/clustering/flop_assignments"
+flop_ev_sdev = "data/clustering/flop_ev_sdev"

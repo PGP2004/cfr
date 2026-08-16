@@ -3,7 +3,7 @@
 #include <cstddef> 
 #include <filesystem>  
 #include <toml.hpp>
-// stages.h
+
 struct Artifacts {
     std::filesystem::path river_strengths;
     std::filesystem::path river_centers;

@@ -10,7 +10,7 @@
 
 class PokerState {
 
-private:
+public:
 
     int starting_stack;
     int big_blind;
@@ -19,36 +19,22 @@ private:
     std::array<int, 2> pips;
 
     int pot;
-    int street;
+    int stage;
     int active_player;
     Action last_action;
 
-public:
-
     PokerState(int stack, int bb, int sb);
 
-    PokerState(const PokerState&) = default;
-
     PokerState apply_action(const Action& action);
-
     PokerState apply_chance();
 
     bool is_legal_action(const Action& action) const;
 
-    //this is jank, should fix!
-    inline int get_street() const { return street/2; }
+    inline int get_street() const { return stage/2; }
 
-    inline bool is_terminal_node() const { return street == 8; }
+    inline bool is_terminal_node() const { return stage == 8; }
 
-    inline bool is_chance_node() const { return (street%2 == 0) && street != 8; }
-
-    inline int get_active_player() const { return active_player; }
-    
-    inline int get_pot() const { return pot; }
-
-    inline const std::array<int,2> get_pips() const {return pips;}
-
-    inline const std::array<int,2> get_stacks() const {return stacks;}
+    inline bool is_chance_node() const { return (stage%2 == 0) && stage != 8; }
 
     inline bool player_folded() const {
         Action fold_action = {0,0};

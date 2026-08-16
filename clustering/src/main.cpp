@@ -23,7 +23,7 @@ int main(int, char** argv) {
         fs::path exe  = fs::weakly_canonical(fs::path(argv[0]));
         fs::path root = exe.parent_path().parent_path().parent_path().parent_path();   // repo root
 
-        fs::path cfg_path = root / "clustering" / "configs" / "default.toml";
+        fs::path cfg_path = root / "configs" / "clustering.toml";
         ClusteringConfig cfg = load_config(cfg_path, root);
 
         run_stage(run_river_strengths,cfg, "Generating River Strengths");

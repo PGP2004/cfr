@@ -2,31 +2,9 @@ Study Stack:
 Read more about git - https://git-scm.com/book
 Callables - https://csiflabs.cs.ucdavis.edu/~tyfeng/ecs34/C++/callable.html
 Parallel Programming -  https://hpc.llnl.gov/documentation/tutorials/introduction-parallel-computing-tutorial
+Memory and Runtime  - https://liuyehcf.github.io/resources/paper/What-Every-Programmer–Should-Know-About-Memory.pdf
 
 
-TODO: 
-- Set off a fable review and fix the issues it raises
-- Unslop the Preflop helpers 
-- Split the data analysis up and also unslop it a bit
-- Cleaner Training Script -> 
-
-- Make it MultiThreaded and speed up the clustering <- Finish!
-
-struct CFRConfig{
-        std::optional<ISetsCkpt> iset_ckpt;
-        BucketPaths bucket_paths;
-        std::vector<std::vector<float>> bet_sizes;
-};
-
-struct TrainConfig{
-    int num_iters;
-    int discounts_per_iter;
-}
-
-struct LogConfig{
-    fs::path data_folder;
-    std::string run_name;
-    std::vector<int> preflop_ckpts;
-    bool log_infosets;
-}
+Plan -> Add a strategy writing thing!
+    -> Add some thing to play against a human or have two bots play against each other
 

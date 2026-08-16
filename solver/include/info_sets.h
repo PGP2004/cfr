@@ -15,7 +15,7 @@ struct ISetsPaths{
     std::string offset_path;
     std::string iters_path;
 
-    void remove() const {
+    void remove() const{
         std::filesystem::remove(regret_path);
         std::filesystem::remove(strategy_path);
         std::filesystem::remove(offset_path);
@@ -57,7 +57,7 @@ public:
 
     void get_strategy(const InfoKey& ikey, std::vector<double>& output) const;
    
-    size_t sample_regret(std::mt19937& rng, std::vector<double>& probs) const;
+    size_t sample_action_idx(std::mt19937& rng, std::vector<double>& probs) const;
 
     void discount(int t);
 

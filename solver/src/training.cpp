@@ -138,9 +138,9 @@ static std::vector<float> toml_float_vec(const toml::array& a) {
     return out;
 }
 
-Config load_config(const fs::path& cfg_path, const fs::path& root) {
+RunConfig load_run_config(const fs::path& cfg_path, const fs::path& root) {
     toml::table t = toml::parse_file(cfg_path.string());
-    Config c;
+    RunConfig c;
 
     c.train.train_iters = t["train"]["train_iters"].value<size_t>().value();
     c.train.iters_per_discount = t["train"]["iters_per_discount"].value<size_t>().value();

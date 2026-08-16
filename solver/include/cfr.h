@@ -34,12 +34,14 @@ class CFR {
     public:
         CFR(CardBuckets buckets, ActionTree at);
         CFR(InfoSets isets, CardBuckets buckets, ActionTree at);
-        InfoKey get_InfoKey(size_t node_idx, const ActionTree& at, const Dealer& d);
- 
+        InfoKey get_InfoKey(size_t node_idx, const ActionTree& at, const Dealer& d) const;
+        
         void train(size_t iters, size_t iters_per_discount, 
             size_t num_threads, size_t omp_chunk_sz, uint32_t base_seed);
 
         const ActionTree& get_action_tree()const {return action_tree;}
         const InfoSets& get_infosets()const {return infosets;}
+
+        std::pair<Action, size_t> sample_strategy(size_t at_idx, Dealer& d, std::mt19937 rng) const;
 
     };

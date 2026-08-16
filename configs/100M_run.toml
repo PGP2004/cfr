@@ -10,8 +10,8 @@ turn = [0.75, 1.5]
 river = [0.75, 1.25]
 
 [train]
-train_iters = 10_000_000
-iters_per_discount = 100_000
+train_iters = 100_000_000
+iters_per_discount = 10_000
 num_threads = 8
 omp_chunk_sz = 256
 base_seed = 0
@@ -21,24 +21,23 @@ flop = "data/clustering/flop_assignments"
 turn = "data/clustering/turn_assignments"
 river = "data/clustering/river_assignments"
 
-# checkpoint to resume from; enabled = false starts fresh
 [load_isets]
-enabled = false
-regret = "data/runs/prev/regret.bin"
-strategy = "data/runs/prev/strat.bin"
-offset = "data/runs/prev/offsets.bin"
-iters = "data/runs/prev/iters.bin"
+enabled = false #if this is false does not load any checkpoint
+regret = "data/runs/100M/regret.bin"
+strategy = "data/runs/100M/strat.bin"
+offset = "data/runs/100M/prev/offsets.bin"
+iters = "data/runs/100M/prev/iters.bin"
 
 # checkpoint to write at end of run
 [save_isets]
 enabled = true
 overwrite = true
-regret = "data/runs/current/regret.bin"
-strategy = "data/runs/current/strat.bin"
-offset = "data/runs/current/offsets.bin"
-iters = "data/runs/current/iters.bin"
+regret = "data/runs/100M/regret.bin"
+strategy = "data/runs/100M/strat.bin"
+offset = "data/runs/100M/offsets.bin"
+iters = "data/runs/100M/iters.bin"
 
 [save_preflop]
 enabled = true
 overwrite = true
-path = "data/runs/current/preflop.csv"
+path = "data/runs/100M/preflop.csv"

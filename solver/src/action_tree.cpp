@@ -5,21 +5,21 @@
 #include "action_tree.h"
 #include "poker_state.h"
 
-int ActionTree::raise_to_x_pot(double x, int me, int pot,
-    std::array<int,2> pips, std::array<int,2> stacks) const {
+int ActionTree::raise_to_x_pot(double x, const PokerState& state) const {
 
+    int me = state.active_player;
     int opp = 1 - me;
-    int my_pip = pips[me]; 
-    int opp_pip = pips[opp];
+    int my_pip = state.pips[me]; 
+    int opp_pip = state.pips[opp];
 
     int to_call = opp_pip - my_pip;
-    int pot_after = pot + to_call;
+    int pot_after = state.pot + to_call;
 
     int cur_bet = std::max(my_pip, opp_pip);
     int raise_to  = cur_bet + static_cast<int>(std::llround(x * pot_after));
 
-    int min_raise_to = cur_bet + std::max(2, to_call);
-    int max_raise_to = std::min(pips[0] + stacks[0], pips[1] + stacks[1]);
+    int min_raise_to = cur_bet + std::max(state.big_blind, to_call);
+    int max_raise_to = std::min(state.pips[0] + state.stacks[0], state.pips[1] + state.stacks[1]);
 
     if (raise_to < min_raise_to) raise_to = min_raise_to;
     if (raise_to >= max_raise_to) raise_to = max_raise_to;
@@ -27,11 +27,6 @@ int ActionTree::raise_to_x_pot(double x, int me, int pot,
 }
 
 std::vector<Action> ActionTree::get_actions(const PokerState& state){
-    int pot = state.get_pot();
-    int player = state.get_active_player();
-    const std::array<int, 2> pips = state.get_pips();
-    const std::array<int, 2> stacks = state.get_stacks();
-    int street = state.get_street();
 
     std::vector<Action> output = {
         {0, 0}, //fold
@@ -40,10 +35,11 @@ std::vector<Action> ActionTree::get_actions(const PokerState& state){
     };
 
     std::unordered_set<int> seen;
+    int street = state.get_street();
 
     for (float x : bet_sizes[street]){
 
-        int chip_amt = raise_to_x_pot(x, player, pot, pips, stacks);
+        int chip_amt = raise_to_x_pot(x, state);
 
         if (seen.insert(chip_amt).second) {
             //prevent multiple min/max raises getting passed along
@@ -68,7 +64,7 @@ PublicState ActionTree::get_public_state(const PokerState& state){
 
     PublicState pub_state{
         .street_idx = state.get_street(),
-        .active_player = state.get_active_player(),
+        .active_player = state.active_player,
         .payoffs = {state.get_payoff(0), state.get_payoff(1)},
         .folded = state.player_folded(),
         .edge_labels = {}

@@ -149,7 +149,7 @@ void InfoSets::get_strategy(const InfoKey& ikey, std::vector<double>& output) co
     }
 }
 
-size_t InfoSets::sample_regret( std::mt19937& rng, std::vector<double>& probs) const {
+size_t InfoSets::sample_action_idx( std::mt19937& rng, std::vector<double>& probs) const {
 
     std::uniform_real_distribution<double> unif(0.0, 1.0);
     double r = unif(rng);
@@ -162,6 +162,7 @@ size_t InfoSets::sample_regret( std::mt19937& rng, std::vector<double>& probs) c
     }
     return idx;
 }
+
 
 void InfoSets::discount(int t) {
 

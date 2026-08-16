@@ -1,0 +1,43 @@
+[game_values]
+starting_stacks = 200
+big_blind = 2
+small_blind = 1
+
+[bet_sizes]
+preflop = [0.5, 1.0]
+flop = [0.33, 0.75, 1.5]
+turn = [0.75, 1.5]
+river = [0.75, 1.25]
+
+[train]
+train_iters = 1_000_000_000
+iters_per_discount = 10_000
+num_threads = 8
+omp_chunk_sz = 256
+base_seed = 0
+
+[buckets]
+flop = "data/clustering/flop_assignments"
+turn = "data/clustering/turn_assignments"
+river = "data/clustering/river_assignments"
+
+[load_isets]
+enabled = false #if this is false does not load any checkpoint
+regret = "data/runs/1B_run/regret.bin"
+strategy = "data/runs/1B_run/strat.bin"
+offset = "data/runs/1B_run/prev/offsets.bin"
+iters = "data/runs/1B_run/prev/iters.bin"
+
+# checkpoint to write at end of run
+[save_isets]
+enabled = true
+overwrite = true
+regret = "data/runs/1B/regret.bin"
+strategy = "data/runs/1B/strat.bin"
+offset = "data/runs/1B/offsets.bin"
+iters = "data/runs/1B/iters.bin"
+
+[save_preflop]
+enabled = true
+overwrite = true
+path = "data/runs/1B/preflop.csv"

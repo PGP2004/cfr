@@ -14,7 +14,7 @@
 
 PokerState::PokerState(int stack, int bb, int sb):
     starting_stack(stack), big_blind(bb), small_blind(sb){
-    street = 0;
+    stage = 0;
     active_player = 0;
 
     stacks.fill(starting_stack);
@@ -69,8 +69,8 @@ PokerState PokerState::apply_action(const Action& action) {
     next.last_action = action;
     next.active_player = 1 - active_player; 
 
-    if (action.type == 0) next.street = 8;
-    else if (round_ended) next.street += 1;
+    if (action.type == 0) next.stage = 8;
+    else if (round_ended) next.stage += 1;
     return next;
 }
 
@@ -84,7 +84,7 @@ PokerState PokerState::apply_chance() {
     next.active_player = 0;
     next.last_action = {-1, -1};
 
-    if (street == 0) { 
+    if (stage == 0) { 
         next.active_player = 1;
         next.pot = 3;
         next.stacks[0] = starting_stack - big_blind;
@@ -93,11 +93,11 @@ PokerState PokerState::apply_chance() {
         next.pips[1] = 1;
     }
 
-    if (street == 2) next.active_player = 0;
-    if (street == 4) next.active_player = 0;
-    if (street == 6) next.active_player = 0;
+    if (stage == 2) next.active_player = 0;
+    if (stage == 4) next.active_player = 0;
+    if (stage == 6) next.active_player = 0;
 
-    next.street += 1;
+    next.stage += 1;
     return next;
 }
 

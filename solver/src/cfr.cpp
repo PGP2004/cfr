@@ -19,13 +19,22 @@ CFR::CFR(InfoSets isets, CardBuckets buckets, ActionTree at):
     action_tree(std::move(at)),
     infosets(std::move(isets)){}
 
-InfoKey CFR::get_InfoKey(size_t node_idx, const ActionTree& at, const Dealer& d) {
+InfoKey CFR::get_InfoKey(size_t node_idx, const ActionTree& at, const Dealer& d) const {
     size_t num_children = at.num_children(node_idx);
     int street = at.street(node_idx);
-    int hand_id = d.get_hand_id(at.active_player(node_idx), street);
+    int hand_id = d.get_card_id(at.active_player(node_idx), street);
     return {node_idx, (size_t)card_buckets.cluster_of(street, hand_id), num_children};
 }
 
+std::pair<Action, size_t> CFR::sample_strategy(size_t at_idx, Dealer& d, std::mt19937 rng) const{
+    std::vector<double> strat_probs;
+
+    InfoKey ikey = get_InfoKey(at_idx, action_tree, d);
+    infosets.get_strategy(ikey, strat_probs);
+    size_t action_idx = infosets.sample_action_idx(rng, strat_probs);
+    Action action = action_tree.get_action(at_idx, action_idx);
+    return {action, action_idx};
+}
 
 double CFR::traverse(int player, size_t node_idx, size_t depth, ThreadBuff& buff) {
 
@@ -43,7 +52,7 @@ double CFR::traverse(int player, size_t node_idx, size_t depth, ThreadBuff& buff
         infosets.get_regret_strategy(ikey, probs);
         infosets.update_strategy(ikey, probs); 
 
-        size_t action_idx = infosets.sample_regret(buff.rng, probs);
+        size_t action_idx = infosets.sample_action_idx(buff.rng, probs);
         size_t child_idx = action_tree.apply_action(node_idx, action_idx);
         double util = traverse(player, child_idx, depth + 1, buff);
 
@@ -57,7 +66,6 @@ double CFR::traverse(int player, size_t node_idx, size_t depth, ThreadBuff& buff
     InfoKey ikey = get_InfoKey(node_idx, action_tree, buff.dealer);
     infosets.get_regret_strategy(ikey, probs);
     action_deltas.assign(ikey.num_actions, 0.0);
-
     double node_util = 0.0;
 
     for (size_t i = 0; i < ikey.num_actions; i++) {

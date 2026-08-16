@@ -23,9 +23,7 @@ class ActionTree{
 
 private:
 
-    int raise_to_x_pot(double x, int player, int pot,
-        std::array<int,2> pips, std::array<int,2> stacks) const;
-
+    int raise_to_x_pot(double x, const PokerState& state) const;
     std::vector<Action> get_actions(const PokerState& state);
     std::vector<Action> get_legal_actions(const PokerState& state);
 
@@ -42,28 +40,24 @@ public:
 
     ActionTree(const PokerState& root_state, const std::vector<std::vector<float>>& bet_szs);
 
-    size_t apply_action(size_t node_idx, size_t action_idx){
+    size_t apply_action(size_t node_idx, size_t action_idx) const{
         if (action_idx >= nodes[node_idx].child_idxs.size()){
             throw std::out_of_range("the idx is out of range");
         }
         return nodes[node_idx].child_idxs[action_idx];
     }
 
-    int active_player(size_t node_idx) const {return pub_states[node_idx].active_player;};
+    Action get_action(size_t node_idx, size_t action_idx) const{return pub_states[node_idx].edge_labels[action_idx];};
+    const std::vector<Action> get_actions(size_t node_idx)const {return pub_states[node_idx].edge_labels;}
+
     int num_children(size_t node_idx) const {return nodes[node_idx].child_idxs.size();};
-
     int street(size_t node_idx) const { return pub_states[node_idx].street_idx;};
-
+    int active_player(size_t node_idx) const {return pub_states[node_idx].active_player;}
     bool is_terminal(size_t node_idx) const {return nodes[node_idx].child_idxs.size() == 0;}
-
-    bool folded(size_t node_idx) const{return pub_states[node_idx].folded;}
-
+    bool is_folded(size_t node_idx) const{return pub_states[node_idx].folded;}
     bool is_root_node(size_t node_idx) const{return root_idx == node_idx;}
-
     double get_payoff(size_t node_idx, int player) const{ return pub_states[node_idx].payoffs[player];}
-
     size_t depth() const;
-
     size_t max_branching() const;
 
 };
