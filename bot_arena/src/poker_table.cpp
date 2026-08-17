@@ -32,9 +32,10 @@ std::pair<Action, size_t> PokerTable::query_user_action(const std::vector<Action
     return {actions[choice], static_cast<size_t>(choice)};
 }
 
-std::array<double,2> PokerTable::play_bot(PokerState init_state, int num_hands, const CFR& bot, Logger& log) {
+std::array<double,2> PokerTable::play_bot(PokerState init_state,const CFR& bot, 
+    Logger& log, int num_hands, int rng_seed) {
 
-    rng.seed(42);
+    rng.seed(rng_seed);
     std::array<double,2> rewards{0, 0};
     int human = 0;
 
@@ -76,8 +77,13 @@ std::array<double,2> PokerTable::play_bot(PokerState init_state, int num_hands, 
         log.display();
         log.clear();
 
+        std::cout << "--------------" <<std::endl;
+        std::cout << "rewward for human: " << dealer.get_reward(node_idx, human, action_tree) << std::endl;
+        std::cout << "rewward for bot: " << dealer.get_reward(node_idx, 1-human, action_tree) << std::endl;
+
         std::string dummy;
         std::getline(std::cin, dummy);
+
         rewards[0] += dealer.get_reward(node_idx, human, action_tree);
         rewards[1] += dealer.get_reward(node_idx, 1-human, action_tree);
     }
@@ -85,38 +91,33 @@ std::array<double,2> PokerTable::play_bot(PokerState init_state, int num_hands, 
     return rewards;
 }
 
-std::array<double,2> PokerTable::bot_duel(int num_hands, const std::array<CFR, 2>& bots) {
-
+std::array<double,2> PokerTable::bot_duel(const std::array<CFR,2>& bots,
+    int num_hands, int rng_seed) {
+    rng.seed(rng_seed);                      // make runs comparable
     std::array<double,2> rewards{0, 0};
-    int sb_bot = 0;
+    int p0_bot = 0;
+    int cur_bot;
+
 
     for (int h = 0; h < num_hands; ++h) {
-
         dealer.deal(rng);
         size_t node_idx = action_tree.root_idx;
-
-        sb_bot = 1 - sb_bot;
+        p0_bot = 1 - p0_bot;
 
         while (!action_tree.is_terminal(node_idx)) {
-            int seat = action_tree.active_player(node_idx);
-
-            Action action;
-            size_t action_idx;
-
-            if (seat == 0) {
-                std::tie(action, action_idx) = bots[sb_bot].sample_strategy(node_idx, dealer, rng);
-            } else {
-                std::tie(action, action_idx) = bots[1 - sb_bot].sample_strategy(node_idx, dealer, rng);
+            if (action_tree.active_player(node_idx) == 0){
+                cur_bot = p0_bot;
+            }
+            else{
+                cur_bot = 1-p0_bot;
             }
 
+            auto [ action, action_idx] = bots[cur_bot].sample_strategy(node_idx, dealer, rng);
             node_idx = action_tree.apply_action(node_idx, action_idx);
         }
 
-        rewards[sb_bot] += dealer.get_reward(node_idx, sb_bot, action_tree);
-        rewards[1-sb_bot] += dealer.get_reward(node_idx, 1-sb_bot, action_tree);
+        rewards[p0_bot] += dealer.get_reward(node_idx, 0, action_tree);
+        rewards[1 - p0_bot] += dealer.get_reward(node_idx, 1, action_tree);
     }
-
     return rewards;
-};
-    
-
+}

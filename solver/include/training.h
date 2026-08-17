@@ -15,7 +15,7 @@ struct TrainParams {
     uint32_t base_seed = 0;
 };
 
-struct LogParams{
+struct TrainLog{
     std::optional<std::filesystem::path> preflop_path;
     std::optional<ISetsPaths> isets_paths;
     bool overwrite_isets = false; //gives permission to overwrite isets
@@ -32,13 +32,12 @@ struct CFRSpec{
 };
 
 CFR load_spec(CFRSpec spec);
+
 void write_preflop_csv(const std::string& path, const CFR& cfr);
-void run_training(const CFRSpec& spec, const TrainParams& tp, const LogParams& lp);
 
-struct RunConfig {
-    TrainParams train;
-    LogParams log;
-    CFRSpec spec;
-};
+void run_training(const CFRSpec& spec, const TrainParams& tp, const TrainLog& lp);
 
-RunConfig load_run_config(const std::filesystem::path& cfg_path, const std::filesystem::path& root);
+CFRSpec load_cfr_config(const std::filesystem::path& cfr_toml_path, const std::filesystem::path& root);
+
+std::pair<TrainParams, TrainLog> load_run_config(const std::filesystem::path& run_toml_path, 
+    const std::filesystem::path& root);

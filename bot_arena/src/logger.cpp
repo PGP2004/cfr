@@ -11,9 +11,9 @@ void Logger::log_state(const PokerState& state) {
 
     lines.push_back("Pot : " + std::to_string(state.pot));
     lines.push_back("You | PIP : " + std::to_string(state.pips[me])
-                  + " | Stack : "  + std::to_string(state.stacks[me]));
+        + " | Stack : "  + std::to_string(state.stacks[me]));
     lines.push_back("Opp | PIP : " + std::to_string(state.pips[opp])
-                  + " | Stack : "  + std::to_string(state.stacks[opp]));
+         + " | Stack : "  + std::to_string(state.stacks[opp]));
 }
 
 void Logger::log_dealer(const Dealer& d, int player, int street) {

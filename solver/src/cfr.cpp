@@ -2,6 +2,7 @@
 #include "card_buckets.h"
 #include "cfr.h"    
 
+#include <iostream>
 #include <omp.h>
 #include <memory>
 #include <utility>

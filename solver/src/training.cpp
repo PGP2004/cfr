@@ -28,7 +28,7 @@ CFR load_spec(CFRSpec spec) {
     return CFR{std::move(buckets), std::move(action_tree)};
 }
 
-void set_up_directories(const LogParams& lp) {
+void set_up_directories(const TrainLog& lp) {
 
     if (lp.preflop_path){
 
@@ -109,7 +109,7 @@ void write_preflop_csv(const std::string& path, const CFR& cfr) {
     if (!out) throw std::runtime_error("write failed: " + path);
 }
 
-void run_training(const CFRSpec& spec, const TrainParams& tp, const LogParams& lp){
+void run_training(const CFRSpec& spec, const TrainParams& tp, const TrainLog& lp){
 
     set_up_directories(lp);
     CFR cfr = load_spec(spec);
@@ -138,55 +138,65 @@ static std::vector<float> toml_float_vec(const toml::array& a) {
     return out;
 }
 
-RunConfig load_run_config(const fs::path& cfg_path, const fs::path& root) {
-    toml::table t = toml::parse_file(cfg_path.string());
-    RunConfig c;
+CFRSpec load_cfr_config(const std::filesystem::path& cfr_toml_path, const std::filesystem::path& root){
 
-    c.train.train_iters = t["train"]["train_iters"].value<size_t>().value();
-    c.train.iters_per_discount = t["train"]["iters_per_discount"].value<size_t>().value();
-    c.train.num_threads = t["train"]["num_threads"].value<size_t>().value();
-    c.train.omp_chunk_sz = t["train"]["omp_chunk_sz"].value<size_t>().value();
-    c.train.base_seed= t["train"]["base_seed"].value<uint32_t>().value();
-
-    c.spec.bucket_paths = {
-        .flop_path  = root/t["buckets"]["flop"].value<std::string>().value(),
-        .turn_path  = root/t["buckets"]["turn"].value<std::string>().value(),
-        .river_path = root/t["buckets"]["river"].value<std::string>().value()
+    toml::table toml = toml::parse_file(cfr_toml_path.string());
+    CFRSpec spec;
+    spec.bucket_paths = {
+        .flop_path = root/toml["buckets"]["flop"].value<std::string>().value(),
+        .turn_path = root/toml["buckets"]["turn"].value<std::string>().value(),
+        .river_path = root/toml["buckets"]["river"].value<std::string>().value()
     };
 
-    c.spec.starting_stack = t["game_values"]["starting_stacks"].value<int>().value();
-    c.spec.big_blind = t["game_values"]["big_blind"].value<int>().value();
-    c.spec.small_blind =  t["game_values"]["small_blind"].value<int>().value();
+    spec.starting_stack = toml["game_values"]["starting_stacks"].value<int>().value();
+    spec.big_blind = toml["game_values"]["big_blind"].value<int>().value();
+    spec.small_blind = toml["game_values"]["small_blind"].value<int>().value();
 
-    c.spec.bet_sizes = {
-        toml_float_vec(*t["bet_sizes"]["preflop"].as_array()),
-        toml_float_vec(*t["bet_sizes"]["flop"].as_array()),
-        toml_float_vec(*t["bet_sizes"]["turn"].as_array()),
-        toml_float_vec(*t["bet_sizes"]["river"].as_array())
+    spec.bet_sizes = {
+        toml_float_vec(*toml["bet_sizes"]["preflop"].as_array()),
+        toml_float_vec(*toml["bet_sizes"]["flop"].as_array()),
+        toml_float_vec(*toml["bet_sizes"]["turn"].as_array()),
+        toml_float_vec(*toml["bet_sizes"]["river"].as_array())
     };
 
-    if (t["load_isets"]["enabled"].value_or(false)) {
-        c.spec.isets_paths = ISetsPaths{
-            .regret_path = (root/t["load_isets"]["regret"].value<std::string>().value()).string(),
-            .strategy_path = (root/t["load_isets"]["strategy"].value<std::string>().value()).string(),
-            .offset_path = (root/t["load_isets"]["offset"].value<std::string>().value()).string(),
-            .iters_path = (root/t["load_isets"]["iters"].value<std::string>().value()).string()
+    if (toml["load_isets"]["enabled"].value_or(false)) {
+        spec.isets_paths = ISetsPaths{
+            .regret_path = (root/toml["load_isets"]["regret"].value<std::string>().value()).string(),
+            .strategy_path = (root/toml["load_isets"]["strategy"].value<std::string>().value()).string(),
+            .offset_path = (root/toml["load_isets"]["offset"].value<std::string>().value()).string(),
+            .iters_path = (root/toml["load_isets"]["iters"].value<std::string>().value()).string()
         };
     }
 
-    if (t["save_isets"]["enabled"].value_or(false)) {
-        c.log.isets_paths = ISetsPaths{
-            .regret_path = (root/t["save_isets"]["regret"].value<std::string>().value()).string(),
-            .strategy_path = (root/t["save_isets"]["strategy"].value<std::string>().value()).string(),
-            .offset_path = (root/t["save_isets"]["offset"].value<std::string>().value()).string(),
-            .iters_path = (root/t["save_isets"]["iters"].value<std::string>().value()).string()
+    return spec;
+}
+
+std::pair<TrainParams, TrainLog> load_run_config(const std::filesystem::path& run_toml_path, 
+    const std::filesystem::path& root) {
+    toml::table toml = toml::parse_file(run_toml_path.string());
+    TrainLog log;
+    TrainParams train;
+
+    train.train_iters = toml["train"]["train_iters"].value<size_t>().value();
+    train.iters_per_discount = toml["train"]["iters_per_discount"].value<size_t>().value();
+    train.num_threads = toml["train"]["num_threads"].value<size_t>().value();
+    train.omp_chunk_sz = toml["train"]["omp_chunk_sz"].value<size_t>().value();
+    train.base_seed= toml["train"]["base_seed"].value<uint32_t>().value();
+
+    if (toml["save_isets"]["enabled"].value_or(false)) {
+        log.isets_paths = ISetsPaths{
+            .regret_path = (root/toml["save_isets"]["regret"].value<std::string>().value()).string(),
+            .strategy_path = (root/toml["save_isets"]["strategy"].value<std::string>().value()).string(),
+            .offset_path = (root/toml["save_isets"]["offset"].value<std::string>().value()).string(),
+            .iters_path = (root/toml["save_isets"]["iters"].value<std::string>().value()).string()
         };
     }
-    c.log.overwrite_isets = t["save_isets"]["overwrite"].value_or(false);
+    log.overwrite_isets = toml["save_isets"]["overwrite"].value_or(false);
 
-    if (t["save_preflop"]["enabled"].value_or(false)) {
-        c.log.preflop_path = root / t["save_preflop"]["path"].value<std::string>().value();
+    if (toml["save_preflop"]["enabled"].value_or(false)) {
+        log.preflop_path = root / toml["save_preflop"]["path"].value<std::string>().value();
     }
-    c.log.overwrite_preflop = t["save_preflop"]["overwrite"].value_or(false);
-    return c;
+    log.overwrite_preflop = toml["save_preflop"]["overwrite"].value_or(false);
+
+    return {train, log};
 }
