@@ -27,20 +27,35 @@ InfoKey CFR::get_InfoKey(size_t node_idx, const ActionTree& at, const Dealer& d)
     return {node_idx, (size_t)card_buckets.cluster_of(street, hand_id), num_children};
 }
 
-std::pair<Action, size_t> CFR::sample_strategy(size_t at_idx, Dealer& d, std::mt19937& rng) const{
-    std::vector<double> strat_probs;
 
-    InfoKey ikey = get_InfoKey(at_idx, action_tree, d);
-    infosets.get_strategy(ikey, strat_probs);
-    size_t action_idx = infosets.sample_action_idx(rng, strat_probs);
-    Action action = action_tree.get_action(at_idx, action_idx);
-    return {action, action_idx};
+double CFR::get_reward(const Dealer& dealer, size_t node_idx, int player){
+
+    if (!action_tree.is_terminal(node_idx)){
+        throw std::runtime_error("cannot get reward for non-terminal node");
+    }
+
+    int opp = 1 - player;
+
+    //if someone folded in the game
+    if (action_tree.is_folded(node_idx)){
+        bool won = (player == action_tree.active_player(node_idx));
+        if (won) return action_tree.get_payoff(node_idx , player);
+        return -action_tree.get_payoff(node_idx, opp);
+    }
+
+            // if no one folded in the game.
+    if (dealer.winner == -1) return 0.0;
+    else if (dealer.winner == player) return action_tree.get_payoff(node_idx, player);
+    else if (dealer.winner == opp) return - action_tree.get_payoff(node_idx, opp);
+
+    throw std::runtime_error("Should not be able to get here");
+    return 0.0;
 }
 
 double CFR::traverse(int player, size_t node_idx, size_t depth, ThreadBuff& buff) {
 
     if (action_tree.is_terminal(node_idx)) {
-        return buff.dealer.get_reward(node_idx, player, action_tree);
+        return get_reward(buff.dealer, node_idx, player);
     }
 
     int active_player = action_tree.active_player(node_idx);

@@ -32,7 +32,7 @@ private:
 public:
 
     size_t root_idx;
-    std::vector<TreeNode> nodes;
+    std::vector<TreeNode> nodes; 
     std::vector<PublicState> pub_states;
 
     //array of bet sizes per street with bet sizes encoded as floats where (0.333 = 1/3 pot bet)

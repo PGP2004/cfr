@@ -78,29 +78,6 @@ void Dealer::deal(std::mt19937& rng){
     winner = get_winner(cards);
 }
 
-double Dealer::get_reward(size_t node_idx, int player, const ActionTree& at)  const{
-
-    if (!at.is_terminal(node_idx)){
-        throw std::runtime_error("cannot get reward for non-terminal node");
-    }
-
-    int opp = 1 - player;
-
-    //if someone folded in the game
-    if (at.is_folded(node_idx)){
-        bool won = (player == at.active_player(node_idx));
-        if (won) return at.get_payoff(node_idx , player);
-        return -at.get_payoff(node_idx, opp);
-    }
-
-    // if no one folded in the game.
-    if (winner == -1) return 0.0;
-    else if (winner == player) return at.get_payoff(node_idx, player);
-    else if (winner == opp) return - at.get_payoff(node_idx, opp);
-
-    throw std::runtime_error("Should not be able to get here");
-    return 0.0;
-}
 
 Dealer::Dealer(){
     for (int i = 0; i < 52; ++i) deck[i] = i; 

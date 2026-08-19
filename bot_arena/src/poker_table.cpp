@@ -1,123 +1,128 @@
 #include "poker_table.h"
 #include "action_tree.h"
+#include "poker_state.h"
 #include "evaluator.h"
 #include <iostream>
 #include <tuple>
 
-PokerTable::PokerTable(const ActionTree& action_tree, Dealer dealer, std::mt19937 rng):
-    action_tree(action_tree), dealer(dealer), rng(rng) {}
+Action query_user_action(const PokerState& state, Logger& log) {
 
-std::pair<Action, size_t> PokerTable::query_user_action(const std::vector<Action>& actions,
-    const PokerState& state, const Dealer& dealer, Logger& log) {
-
-    log.log_state(state);
+    log.log_cards(state);
     log.rule();
-    log.log_dealer(dealer, state.active_player, state.get_street());
+    log.log_dealer(state);
     log.rule();
-    log.log_user_options(actions);
-
+    const std::vector<Action> options = log.log_user_options(state);
     log.display();
     log.clear();
 
     std::string in;
-    int choice = 0;
+    int choice = -1;
     while (std::getline(std::cin, in)) {
-        try {
-            choice = std::stoi(in);
-            if (choice >= 0 && choice < (int)actions.size()) break;
-        } catch (...) {}
+        try { choice = std::stoi(in); } catch (...) { choice = -1; }
+        if (choice >= 0 && choice < (int)options.size()) break;
         std::cout << "invalid, retry: " << std::flush;
     }
 
-    return {actions[choice], static_cast<size_t>(choice)};
+    Action action = options[choice];
+    if (action.type == 3) {
+        auto [min_raise, max_raise] = state.get_raise_bounds();
+        std::cout << "raise to [" << min_raise << ", " << max_raise << "]: " << std::flush;
+        while (std::getline(std::cin, in)) {
+            try { action.amt = std::stoi(in); } catch (...) { action.amt = -1; }
+            if (action.amt >= min_raise && action.amt <= max_raise) break;
+            std::cout << "invalid, retry: " << std::flush;
+        }
+    }
+
+    return action;
 }
 
-std::array<double,2> PokerTable::play_bot(PokerState init_state,const CFR& bot, 
-    Logger& log, int num_hands, int rng_seed) {
+std::array<double,2> human_vs_bot(PokerState& root_state, std::mt19937& rng,  Logger& log,
+    int num_hands, Agent& bot) {
 
-    rng.seed(rng_seed);
     std::array<double,2> rewards{0, 0};
-    int human = 0;
-
-    PokerState state{init_state};
+    int human_seat = 0;
 
     for (int h = 0; h < num_hands; ++h) {
 
-        dealer.deal(rng);
-        state = init_state;
-        size_t node_idx = action_tree.root_idx;
-        human = 1 - human;
+        PokerState state{root_state};
+        bot.reset();
+        human_seat = 1 - human_seat;
         log.clear();
 
-        while (!action_tree.is_terminal(node_idx)) {
+        while (!state.is_terminal()) {
 
-            int player = action_tree.active_player(node_idx);
+            if  (state.is_chance()){
+                state = state.apply_chance(rng);
+                continue;
+            }
+
+            if (state.is_terminal()) break;
+
+            const int player = state.active_player;
+
             Action action;
-            size_t action_idx;
 
-            while (state.is_chance_node())
-                state = state.apply_chance();
-
-            if (player == human) {
-                const std::vector<Action> options = action_tree.get_actions(node_idx);
-                std::tie(action, action_idx) = query_user_action(options, state, dealer, log);
+            if (player == human_seat) {
+                action = query_user_action(state, log);
                 log.log_action("You", action);
             } else {
-                std::tie(action, action_idx) = bot.sample_strategy(node_idx, dealer, rng);
+                action = bot.get_action(state);
                 log.log_action("Opp", action);
             }
 
-            node_idx = action_tree.apply_action(node_idx, action_idx);
+            bot.update_on_action(state, action);
             state = state.apply_action(action);
         }
 
-        log.log_showdown(dealer, action_tree, node_idx, human);
+        log.log_showdown(state, human_seat);
         log.rule();
         log.push("press enter for next hand");
         log.display();
         log.clear();
 
-        std::cout << "--------------" <<std::endl;
-        std::cout << "rewward for human: " << dealer.get_reward(node_idx, human, action_tree) << std::endl;
-        std::cout << "rewward for bot: " << dealer.get_reward(node_idx, 1-human, action_tree) << std::endl;
-
         std::string dummy;
         std::getline(std::cin, dummy);
 
-        rewards[0] += dealer.get_reward(node_idx, human, action_tree);
-        rewards[1] += dealer.get_reward(node_idx, 1-human, action_tree);
+        rewards[0] += state.get_reward(human_seat);
+        rewards[1] += state.get_reward(1 - human_seat);
     }
 
     return rewards;
 }
 
-std::array<double,2> PokerTable::bot_duel(const std::array<CFR,2>& bots,
-    int num_hands, int rng_seed) {
-    rng.seed(rng_seed);                      // make runs comparable
-    std::array<double,2> rewards{0, 0};
-    int p0_bot = 0;
-    int cur_bot;
 
+std::array<double,2> bots_vs_bot( const PokerState& root_state, std::mt19937& rng,
+    int num_hands, std::array<Agent*,2> bots) {
+
+    std::array<double,2> rewards{0, 0};
 
     for (int h = 0; h < num_hands; ++h) {
-        dealer.deal(rng);
-        size_t node_idx = action_tree.root_idx;
-        p0_bot = 1 - p0_bot;
 
-        while (!action_tree.is_terminal(node_idx)) {
-            if (action_tree.active_player(node_idx) == 0){
-                cur_bot = p0_bot;
-            }
-            else{
-                cur_bot = 1-p0_bot;
+        PokerState state{root_state};
+        bots[0]->reset();
+        bots[1]->reset();
+
+        const int b0_seat = h % 2;
+
+        while (!state.is_terminal()) {
+
+            if (state.is_chance()){
+                state = state.apply_chance(rng);
+                continue;
             }
 
-            auto [ action, action_idx] = bots[cur_bot].sample_strategy(node_idx, dealer, rng);
-            node_idx = action_tree.apply_action(node_idx, action_idx);
+            const int actor = (state.active_player == b0_seat) ? 0 : 1;
+            const Action action = bots[actor]->get_action(state);
+
+            bots[0]->update_on_action(state, action);
+            bots[1]->update_on_action(state, action);
+            state = state.apply_action(action);
         }
 
-        rewards[p0_bot] += dealer.get_reward(node_idx, 0, action_tree);
-        rewards[1 - p0_bot] += dealer.get_reward(node_idx, 1, action_tree);
+        rewards[0] += state.get_reward(b0_seat);
+        rewards[1] += state.get_reward(1 - b0_seat);
     }
+
     return rewards;
 }

@@ -133,10 +133,10 @@ ActionTree::ActionTree(const PokerState& root_state, const std::vector<std::vect
         auto [state, node_idx] = std::move(stack.back());
         stack.pop_back();
 
-        if (state.is_terminal_node()) continue;
+        if (state.is_terminal()) continue;
 
-        if (state.is_chance_node()) {
-            PokerState post_chance = state.apply_chance();
+        if (state.is_chance()) {
+            PokerState post_chance = state.apply_chance(rng);
             pub_states[node_idx] = get_public_state(post_chance);
             stack.push_back({std::move(post_chance), node_idx});
             continue;

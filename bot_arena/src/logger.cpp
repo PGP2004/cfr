@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <iostream>
 
-void Logger::log_state(const PokerState& state) {
+void Logger::log_cards(const PokerState& state) {
     int me  = state.active_player;
     int opp = 1 - me;
 
@@ -16,15 +16,21 @@ void Logger::log_state(const PokerState& state) {
          + " | Stack : "  + std::to_string(state.stacks[opp]));
 }
 
-void Logger::log_dealer(const Dealer& d, int player, int street) {
-    lines.push_back("Hand : " + card_string(d.cards[player][0]) + " "
-                              + card_string(d.cards[player][1]));
+void Logger::log_dealer(const PokerState& state) {
+    const Dealer& d = state.get_dealer();
+    int player = state.active_player;
+    int street = state.get_street();
 
-    std::vector<int> board_cards_per_st = {0, 3, 4, 5, 5};
-    int n = board_cards_per_st[street];
-    if (n > 0) {
+    std::vector<uint8_t> cards = state.get_cards(player);
+
+    if (cards.size() >= 2){
+        lines.push_back("Hand : " + card_string(cards[0]) + " "
+                + card_string(cards[1]));
+    }
+    
+    if (cards.size() > 2) {
         std::string board = "Board :";
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < cards.size(); ++i)
             board += " " + card_string(d.cards[player][2 + i]);
         lines.push_back(board);
     }
@@ -35,30 +41,47 @@ void Logger::log_action(const std::string& name, const Action& action) {
     rule();
 }
 
-void Logger::log_user_options(const std::vector<Action>& actions) {
+
+std::vector<Action> Logger::log_user_options(const PokerState& state){
+    auto [min_raise, max_raise] = state.get_raise_bounds();
+
+    std::vector<Action> options;
+    for (const Action& a : {Action{0,0}, Action{1,0}, Action{2,0}})
+        if (state.is_legal_action(a)) options.push_back(a);
+    if (min_raise <= max_raise) options.push_back({3, min_raise});
+
     lines.push_back("Choose Your Action:");
-    for (size_t i = 0; i < actions.size(); ++i)
-        lines.push_back(std::to_string(i) + " - " + actions[i].to_string());
+    for (size_t i = 0; i < options.size(); ++i) {
+        std::string label;
+        if (options[i].type == 3)
+            label = "raise to " + std::to_string(min_raise) + " - " + std::to_string(max_raise);
+        else
+            label = options[i].to_string();
+        lines.push_back(std::to_string(i) + " - " + label);
+    }
+    return options;
 }
 
-void Logger::log_showdown(const Dealer& d, const ActionTree& action_tree, size_t node_idx, int human) {
-    int opp = 1 - human;
+void Logger::log_showdown(const PokerState& state, int player) {
+    int opp = 1 - player;
 
-    log_dealer(d, human, action_tree.street(node_idx));
+    log_dealer(state);
 
-    if (action_tree.is_folded(node_idx)){
+    if (state.player_folded()){
         lines.push_back("Opp Hand : (folded)");
     }
+
     else{
-        lines.push_back("Opp Hand : " + card_string(d.cards[opp][0]) + " "
-            + card_string(d.cards[opp][1]));
+        std::vector<uint8_t> opp_cards = state.get_cards(opp);
+        lines.push_back("Opp Hand : " + card_string(opp_cards[0]) + " "
+            + card_string(opp_cards[1]));
     }
     rule();
 
-    double reward = d.get_reward(node_idx, human, action_tree);
-    if (reward > 0) lines.push_back(std::format("You win  {:.2f}", reward));
-    else if (reward < 0) lines.push_back(std::format("You lose {:.2f}", -reward));
-    else lines.push_back("Split pot");
+    double reward = state.get_reward(player);
+    if (reward > 0) lines.push_back(std::format("Chips won this hand  : {:.2f}", reward));
+    else if (reward < 0) lines.push_back(std::format("Chips lost this hand : {:.2f}", reward < 0 ? -reward : reward));
+    else lines.push_back("Split pot : 0.00");
 }
 
 std::string Logger::render() const {

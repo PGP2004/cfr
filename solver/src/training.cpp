@@ -15,53 +15,6 @@
 
 namespace fs = std::filesystem;
 
-CFR load_spec(CFRSpec spec) {
-    CardBuckets buckets{spec.bucket_paths};
-    PokerState init_state{spec.starting_stack, spec.big_blind, spec.small_blind}; 
-    ActionTree action_tree{init_state, spec.bet_sizes};
-
-    if (spec.isets_paths) {
-        InfoSets isets{*spec.isets_paths};
-        return CFR{std::move(isets), std::move(buckets), std::move(action_tree)};
-    }
-
-    return CFR{std::move(buckets), std::move(action_tree)};
-}
-
-void set_up_directories(const TrainLog& lp) {
-
-    if (lp.preflop_path){
-
-        fs::path p = *lp.preflop_path;
-        if (!lp.overwrite_preflop && fs::exists(p)){
-            throw std::runtime_error("Cannot write to " + p.string() +" since the path already exists");
-        }
-
-        if (p.has_parent_path()) fs::create_directories(p.parent_path());
-    }
-
-    if (! lp.isets_paths) return;
-
-    std::vector<fs::path> from_isets;
-    from_isets.push_back(lp.isets_paths->regret_path);
-    from_isets.push_back(lp.isets_paths->strategy_path);
-    from_isets.push_back(lp.isets_paths->offset_path);
-    from_isets.push_back(lp.isets_paths->iters_path);
-
-    if (!lp.overwrite_isets){
-        for (const auto& p : from_isets) {
-            if (fs::exists(p)){
-                throw std::runtime_error("Cannot write to " + p.string() +" since the path already exists");
-            }
-        }
-    }
-
-    for (const auto& p : from_isets) {
-        if (p.has_parent_path())
-            fs::create_directories(p.parent_path());
-    }
-}
-
 //clauded need to do more carefully
 void write_preflop_csv(const std::string& path, const CFR& cfr) {
     static const std::array<uint8_t, 1> cpr = {2};
@@ -109,27 +62,38 @@ void write_preflop_csv(const std::string& path, const CFR& cfr) {
     if (!out) throw std::runtime_error("write failed: " + path);
 }
 
-void run_training(const CFRSpec& spec, const TrainParams& tp, const TrainLog& lp){
+void generate_report(const ReportParams& report, const CFR& cfr) {
+    std::vector<fs::path> targets;
 
-    set_up_directories(lp);
-    CFR cfr = load_spec(spec);
+    if (report.preflop_path) targets.push_back(*report.preflop_path);
 
-    cfr.train(tp.train_iters, tp.iters_per_discount, 
-        tp.num_threads, tp.omp_chunk_sz, tp.base_seed);
-
-    if (lp.preflop_path){
-
-        if (lp.overwrite_preflop)fs::remove(*lp.preflop_path);
-        write_preflop_csv(*lp.preflop_path, cfr);
+    if (report.isets_paths){
+        const auto& ip = *report.isets_paths;
+        targets.insert(targets.end(), {ip.regret_path, ip.strategy_path, ip.offset_path, ip.iters_path});
     }
 
-    if (lp.isets_paths){
-        if (lp.overwrite_isets) (*lp.isets_paths).remove();
-        const InfoSets& isets = cfr.get_infosets();
-        isets.write_ckpt(*lp.isets_paths);
-    }
+    for (const fs::path& p : targets)
+        if (p.has_parent_path()) fs::create_directories(p.parent_path());
+
+    if (report.preflop_path)
+        write_preflop_csv(*report.preflop_path, cfr);
+
+    if (report.isets_paths)
+        cfr.get_infosets().write_ckpt(*report.isets_paths);
 }
 
+CFR load_spec(CFRSpec spec) {
+    CardBuckets buckets{spec.bucket_paths};
+    PokerState init_state{spec.starting_stack, spec.big_blind, spec.small_blind}; 
+    ActionTree action_tree{init_state, spec.bet_sizes};
+
+    if (spec.isets_paths) {
+        InfoSets isets{*spec.isets_paths};
+        return CFR{std::move(isets), std::move(buckets), std::move(action_tree)};
+    }
+
+    return CFR{std::move(buckets), std::move(action_tree)};
+}
 /// ---------------------------- TOML Setup Code! ------------------------------------
 
 static std::vector<float> toml_float_vec(const toml::array& a) {
@@ -171,10 +135,31 @@ CFRSpec load_cfr_config(const std::filesystem::path& cfr_toml_path, const std::f
     return spec;
 }
 
-std::pair<TrainParams, TrainLog> load_run_config(const std::filesystem::path& run_toml_path, 
-    const std::filesystem::path& root) {
+
+ReportParams load_report_config(const std::filesystem::path& report_toml_path, const std::filesystem::path& root) {
+    toml::table toml = toml::parse_file(report_toml_path.string());
+    ReportParams report;
+
+
+    if (toml["save_isets"]["enabled"].value_or(false)) {
+        report.isets_paths = ISetsPaths{
+            .regret_path = (root/toml["save_isets"]["regret"].value<std::string>().value()).string(),
+            .strategy_path = (root/toml["save_isets"]["strategy"].value<std::string>().value()).string(),
+            .offset_path = (root/toml["save_isets"]["offset"].value<std::string>().value()).string(),
+            .iters_path = (root/toml["save_isets"]["iters"].value<std::string>().value()).string()
+        };
+    }
+    report.overwrite_isets = toml["save_isets"]["overwrite"].value_or(false);
+
+    if (toml["save_preflop"]["enabled"].value_or(false)) {
+        report.preflop_path = root / toml["save_preflop"]["path"].value<std::string>().value();
+    }
+    report.overwrite_preflop = toml["save_preflop"]["overwrite"].value_or(false);
+    return report;
+}
+
+TrainParams load_train_config(const std::filesystem::path& run_toml_path) {
     toml::table toml = toml::parse_file(run_toml_path.string());
-    TrainLog log;
     TrainParams train;
 
     train.train_iters = toml["train"]["train_iters"].value<size_t>().value();
@@ -183,20 +168,5 @@ std::pair<TrainParams, TrainLog> load_run_config(const std::filesystem::path& ru
     train.omp_chunk_sz = toml["train"]["omp_chunk_sz"].value<size_t>().value();
     train.base_seed= toml["train"]["base_seed"].value<uint32_t>().value();
 
-    if (toml["save_isets"]["enabled"].value_or(false)) {
-        log.isets_paths = ISetsPaths{
-            .regret_path = (root/toml["save_isets"]["regret"].value<std::string>().value()).string(),
-            .strategy_path = (root/toml["save_isets"]["strategy"].value<std::string>().value()).string(),
-            .offset_path = (root/toml["save_isets"]["offset"].value<std::string>().value()).string(),
-            .iters_path = (root/toml["save_isets"]["iters"].value<std::string>().value()).string()
-        };
-    }
-    log.overwrite_isets = toml["save_isets"]["overwrite"].value_or(false);
-
-    if (toml["save_preflop"]["enabled"].value_or(false)) {
-        log.preflop_path = root / toml["save_preflop"]["path"].value<std::string>().value();
-    }
-    log.overwrite_preflop = toml["save_preflop"]["overwrite"].value_or(false);
-
-    return {train, log};
+    return train;
 }

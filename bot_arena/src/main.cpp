@@ -19,15 +19,10 @@ int main(int , char** argv) {
     CFRSpec spec = load_cfr_config(path, root);
     CFR cfr = load_spec(spec);
 
-    const ActionTree& tree = cfr.get_action_tree();
-    PokerState init_state{spec.starting_stack, 
-        spec.big_blind, spec.small_blind};
-
-    Dealer dealer{};
+    PokerState init_state{spec.starting_stack, spec.big_blind, spec.small_blind};
     std::mt19937 rng;
-    PokerTable table(tree, dealer, rng);
-    Logger log{};
-    table.play_bot(init_state, cfr, log, 10, 13);
+    rng.seed(10);
+
 
     return 0;
 }

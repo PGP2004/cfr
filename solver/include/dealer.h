@@ -1,7 +1,6 @@
 #pragma once
 #include "indexer.h"      
 #include "evaluator.h"  
-#include "action_tree.h"
 #include <array>
 #include <cstdint>
 #include <random>
@@ -18,7 +17,8 @@ public:
     }
 
     void deal(std::mt19937& rng);
-    double get_reward(size_t node_idx, int player, const ActionTree& at) const;
+    
     Dealer();
 
 };
+
